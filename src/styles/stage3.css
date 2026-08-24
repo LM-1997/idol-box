@@ -1,0 +1,33 @@
+.export-panel,.burn-guide{background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,.04);padding:20px;margin-top:18px}.sf-format-row{display:flex;gap:8px;align-items:center;margin-top:12px}.sf-format-row select{background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:8px 10px;border-radius:3px;font-size:12px;flex:1}.export-actions{display:flex;gap:8px;margin-top:16px}.export-actions select{background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:10px;border-radius:3px;min-width:250px}.playback-settings{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin:-8px 0 18px;padding:14px 16px;border:1px solid var(--line);background:var(--surface-raised);border-radius:3px}
+.ps-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.delay-control{display:flex;align-items:center;gap:7px;color:var(--text-secondary);font-size:12px}.delay-control label{display:flex;align-items:center;gap:5px}.delay-control input{width:68px;background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:8px;text-align:center;border-radius:3px}.delay-control button{width:34px;height:34px;border:1px solid var(--line);background:transparent;color:var(--text-primary);font-size:12px;border-radius:3px}.delay-control button:hover{border-color:var(--accent-gold);color:var(--accent-gold)}.delay-control button.fine{width:auto;padding:0 7px;font-size:12px}.delay-control output{min-width:76px;color:var(--accent-gold);font-size:12px}.playback-settings fieldset{border:0;margin:0;padding:0;display:flex;align-items:center;gap:8px}.playback-settings legend{float:left;color:var(--text-secondary);font-size:12px;margin-right:8px}.segmented{display:flex;border:1px solid var(--line);border-radius:3px;overflow:hidden}.segmented button{border:0;border-right:1px solid var(--line);background:transparent;color:var(--text-secondary);padding:8px 14px;font-size:12px}.segmented button:last-child{border-right:0}.segmented button.active{background:var(--accent-gold);color:#fff;font-weight:600}.lyrics-layer.position-top{top:24px;bottom:auto}.lyrics-layer.position-bottom{top:auto;bottom:24px}.burn-guide pre{white-space:pre-wrap;color:var(--text-secondary);font-size:12px;line-height:1.7;background:var(--surface-raised);border:1px solid var(--line);padding:14px;margin:16px 0 0;overflow:auto}.burn-guide .section-head>div{flex:1}.burn-actions{display:flex!important;flex:none!important;gap:8px;flex-wrap:wrap}@media(max-width:900px){.playback-settings{flex-wrap:wrap}}@media(max-width:600px){.export-actions,.burn-actions{flex-direction:column}.export-actions select{min-width:0;width:100%}.playback-settings{gap:12px}.delay-control{width:100%;flex-wrap:wrap}.playback-settings fieldset{width:100%;justify-content:space-between}}
+.member-name-toggle{display:flex;align-items:center;gap:7px;color:var(--text-secondary);font-size:12px;cursor:pointer}
+.member-name-toggle input{accent-color:var(--accent-gold)}
+
+/* ---- 字幕字体与大小 ---- */
+.lyrics-layer{font-family:var(--lyric-font,"思源雅黑"),sans-serif}
+.lyrics-layer .layer-line{font-size:var(--lyric-size,30px)}
+.romaji{display:block;font-size:.45em;font-weight:500;font-style:italic;opacity:.8;letter-spacing:.03em}
+ruby rt.romaji{display:block;font-size:.4em;opacity:.8;font-style:italic}
+.font-control{display:flex;align-items:center;gap:7px;color:var(--text-secondary);font-size:12px}
+.font-control select{background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:7px 9px;border-radius:3px;font-size:12px;max-width:130px}
+.font-control select:focus{border-color:var(--accent-gold);outline:none}
+.font-size-control button{width:28px;height:28px;border:1px solid var(--line);background:transparent;color:var(--text-primary);font-size:12px;border-radius:3px;line-height:1}
+.font-size-control button:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+.font-size-control input[type=range]{width:90px;accent-color:var(--accent-gold)}
+.font-size-control output{min-width:26px;text-align:center;color:var(--accent-gold);font:12px "SF Mono",Consolas,monospace}
+/* 播放设置更紧凑，允许横向空间不够时内部滚动而非溢出 */
+.playback-settings{gap:10px}
+
+/* ---- 字幕字体特效（data-fx 作用在 .lyrics-layer 上） ----
+   外描边：使用 text-shadow 四向偏移模拟真正的外描边，不侵入字形内部。
+   与 -webkit-text-stroke 居中描边不同，此方案保证描边全部在文字外侧。 */
+.lyrics-layer[data-fx="stroke-white"] .layer-line,
+.lyrics-layer[data-fx="stroke-white"] .layer-line *{text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}
+.lyrics-layer[data-fx="stroke-black"] .layer-line,
+.lyrics-layer[data-fx="stroke-black"] .layer-line *{text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000}
+.lyrics-layer[data-fx="stroke-gold"] .layer-line,
+.lyrics-layer[data-fx="stroke-gold"] .layer-line *{text-shadow:-1px -1px 0 var(--accent-gold),1px -1px 0 var(--accent-gold),-1px 1px 0 var(--accent-gold),1px 1px 0 var(--accent-gold)}
+.lyrics-layer[data-fx="glow-white"] .layer-line{text-shadow:0 0 4px #ffffff,0 0 10px rgba(255,255,255,.6),0 1px 3px #000}
+.lyrics-layer[data-fx="glow-black"] .layer-line{text-shadow:0 0 3px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.7),0 1px 2px #000}
+.lyrics-layer[data-fx="shadow"] .layer-line{text-shadow:0 2px 5px rgba(0,0,0,.7),0 1px 2px rgba(0,0,0,.5)}

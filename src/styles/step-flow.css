@@ -1,0 +1,118 @@
+/* step-flow.css — Claude 风格向导式步骤卡片 */
+
+/* ---- 步骤流容器 ---- */
+.step-flow{
+  border:1px solid var(--line);border-radius:6px;
+  background:var(--surface);
+  overflow:hidden;
+  margin-bottom:16px;
+}
+.step-flow .section-head{margin:0;padding:14px 16px;border-bottom:1px solid var(--line)}
+
+/* ---- 进度条 ---- */
+.sf-progress{
+  display:flex;align-items:center;justify-content:flex-start;gap:0;
+  padding:16px 24px 12px;
+  border-bottom:1px solid var(--line);
+}
+.sf-progress-dot{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;
+  background:rgba(0,0,0,.04);color:var(--text-secondary);
+  border:2px solid var(--line);
+  position:relative;z-index:1;
+  transition:all .3s;
+}
+.sf-progress-dot.active{
+  background:var(--accent-gold);color:#fff;
+  border-color:var(--accent-gold);
+  box-shadow:0 0 0 4px rgba(0,82,217,.15);
+  animation:sfPulse 2s ease-in-out infinite;
+}
+.sf-progress-dot.done{
+  background:#2d7d46;color:#fff;border-color:#2d7d46;
+  cursor:pointer;
+}
+.sf-progress-dot.done:hover{box-shadow:0 0 0 4px rgba(45,125,70,.2)}
+/* 进度点之间的连线 */
+.sf-progress-dot + .sf-progress-dot{margin-left:40px}
+.sf-progress-dot + .sf-progress-dot::before{
+  content:'';position:absolute;right:100%;top:50%;
+  width:40px;height:2px;
+  background:var(--line);
+  transform:translateY(-50%);
+}
+.sf-progress-dot.done + .sf-progress-dot::before,
+.sf-progress-dot.done + .sf-progress-dot.active::before{background:#2d7d46}
+@keyframes sfPulse{0%,100%{box-shadow:0 0 0 4px rgba(0,82,217,.15)}50%{box-shadow:0 0 0 10px rgba(0,82,217,0)}}
+
+/* ---- 单张步骤卡片 ---- */
+.sf-card{
+  padding:0;
+  transition:opacity .2s;
+}
+.sf-card-header{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:16px 24px;
+}
+.sf-card-header strong{font-size:12px;font-weight:600;margin:0;color:var(--text-primary)}
+.sf-card-header .sf-summary{font-size:12px;color:var(--text-secondary);margin:4px 0 0}
+
+/* ---- 卡片正文 ---- */
+.sf-card-body{
+  padding:0 24px;
+  overflow:hidden;
+}
+.sf-card-body p{font-size:12px;color:var(--text-secondary);margin:0 0 10px;line-height:1.75}
+.sf-card-body .sf-code{
+  display:block;white-space:pre-wrap;font:12px/1.6 "SF Mono",Consolas,monospace;
+  color:var(--text-secondary);background:rgba(0,0,0,.04);
+  border:1px solid var(--line);border-radius:3px;padding:10px 12px;
+  margin:8px 0;overflow:auto;max-height:200px;
+}
+.sf-card-body .sf-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.sf-card-body .sf-meta{font-size:12px;color:var(--text-secondary);margin:8px 0;line-height:1.7}
+.sf-card-body .sf-meta strong{color:var(--text-primary)}
+.sf-card-body .sf-meta a{color:var(--accent-gold);text-decoration:none}
+.sf-card-body .sf-meta a:hover{text-decoration:underline}
+
+/* ---- 卡片底部操作栏 ---- */
+.sf-card-footer{
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:0 24px;
+  border-top:1px solid var(--line);
+  overflow:hidden;
+}
+.sf-card-footer .sf-hint{font-size:12px;color:var(--text-secondary);margin-right:auto}
+.sf-card-footer .sf-confirm{
+  padding:8px 20px;border:1px solid var(--accent-gold);
+  background:var(--accent-gold);color:#fff;
+  border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;
+  transition:opacity .15s;
+  white-space:nowrap;
+}
+.sf-card-footer .sf-confirm:hover{opacity:.85}
+
+/* ---- 内嵌按钮 ---- */
+.sf-body-btn{
+  padding:7px 14px;border:1px solid var(--line);
+  background:transparent;color:var(--text-primary);
+  border-radius:3px;font-size:12px;cursor:pointer;
+  transition:border-color .15s;
+}
+.sf-body-btn:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+.sf-body-btn.primary{background:var(--accent-gold);color:#fff;border-color:var(--accent-gold);font-weight:600}
+.sf-body-btn.primary:hover{opacity:.85}
+
+/* ---- 响应式 ---- */
+@media(max-width:600px){
+  .sf-progress{padding:12px 16px 8px;gap:0}
+  .sf-progress-dot{width:28px;height:28px;font-size:12px}
+  .sf-progress-dot + .sf-progress-dot{margin-left:30px}
+  .sf-progress-dot + .sf-progress-dot::before{width:30px}
+  .sf-card-header{padding:14px 16px}
+  .sf-card-body{padding:10px 16px 0}
+  .sf-card-footer{padding:12px 16px 16px;flex-wrap:wrap}
+  .sf-card-footer .sf-hint{width:100%}
+}

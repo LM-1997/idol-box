@@ -1,0 +1,11 @@
+:root{
+  --bg-stage:#EEEEEE;
+  --surface:#FFFFFF;
+  --surface-raised:#F3F3F3;
+  --text-primary:#171717;
+  --text-secondary:#999999;
+  --accent-gold:#0052D9;
+  --line:#E8E8E8;
+  --muted:#BBBBBB;
+  --shadow:0 1px 10px rgba(0,0,0,.05),0 4px 5px rgba(0,0,0,.08)
+}

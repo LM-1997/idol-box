@@ -1,0 +1,12 @@
+{
+  "name": "idol-lyrics-tool",
+  "version": "1.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure frontend idol lyrics assignment and rehearsal tool. Runs entirely in-browser via CDN (no build, no install). See index.html for CDN script tags; the dependencies listed here are informational only and are not required to run the app.",
+  "dependencies": {
+    "exceljs": "^4.4.0",
+    "kuroshiro": "^1.2.0",
+    "kuroshiro-analyzer-kuromoji": "^1.1.0"
+  }
+}

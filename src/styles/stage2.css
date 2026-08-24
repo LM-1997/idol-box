@@ -1,0 +1,39 @@
+.stage-two-tools{border-top:1px solid var(--line);margin-top:24px;padding-top:22px}.tool-title{display:flex;gap:12px;align-items:flex-start;margin-bottom:15px}.tool-title h2{font-size:12px;margin:0}.tool-title p{font-size:12px;color:var(--text-secondary);margin:5px 0 0;line-height:1.5}.field-label{font-size:12px;color:var(--text-secondary);display:block;margin:12px 0 7px}.stage-two-tools select{width:100%;background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:9px;border-radius:3px}.segment-editor,.furigana-editor{display:grid;gap:8px;margin:12px 0}.editor-empty{font-size:12px;color:var(--text-secondary);padding:12px 0}.segment-row{display:grid;grid-template-columns:1fr 100px 26px;gap:6px}.segment-row input,.segment-row select,.furigana-row input{background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:8px;border-radius:3px;min-width:0}.segment-row button{border:0;background:none;color:var(--text-secondary);font-size:12px}.furigana-tool{border-top:1px solid var(--line);margin-top:20px;padding-top:20px}.furigana-editor{max-height:220px;overflow:auto}.furigana-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;align-items:center}.furigana-row span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.layer-line ruby{ruby-position:over}.layer-line rt{font-size:.42em;font-weight:500;line-height:1;color:var(--text-secondary)}
+.layer-line .romaji{display:block;font-size:.55em;font-weight:500;font-style:italic;color:rgba(255,255,255,.72);line-height:1.25;margin-top:2px}
+.segment-chip{display:inline-block;margin-right:5px}.segment-chip+.segment-chip{padding-left:5px;border-left:1px solid var(--line)}
+.furigana-hint{font-size:12px;color:var(--accent-gold);margin:6px 0 0}
+.ai-progress-wrap{margin:10px 0 2px}
+.ai-progress-bar{height:6px;border-radius:3px;background:var(--surface-raised);border:1px solid var(--line);overflow:hidden}
+.ai-progress-fill{height:100%;width:0;background:var(--accent-gold);transition:width .25s ease}
+.ai-progress-text{display:block;margin-top:5px;font-size:12px;color:var(--text-secondary);font-family:"SF Mono",Consolas,monospace}
+/* AI 模型设置面板（仅 DeepSeek） */
+.ds-settings{border:1px solid var(--line);border-radius:6px;background:var(--surface);padding:10px 12px;margin-bottom:12px}
+.ds-settings-head{font-size:12px;color:var(--text-secondary);margin-bottom:8px;font-weight:600}
+.ds-row{margin-bottom:7px}
+.ds-row .field-label{margin:0 0 4px;font-size:12px;color:var(--text-secondary);display:block}
+.ds-row input,.ds-row select{background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:6px 8px;border-radius:3px;font-size:12px;min-width:0;width:100%}
+.ds-row input:focus,.ds-row select:focus{border-color:var(--accent-gold);outline:none}
+.ds-hint{display:block;margin-top:4px;font-size:12px;color:var(--text-secondary);line-height:1.5}
+.ds-link{display:inline-block;font-size:12px;color:var(--accent-gold);text-decoration:none;margin-top:2px}
+.ds-link:hover{text-decoration:underline}
+/* 成员多选 chips（时间轴 + 分段编辑器） */
+.member-chips{display:inline-flex;flex-wrap:wrap;gap:3px}
+.member-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);color:var(--text-secondary);font-size:12px;line-height:1.4;cursor:pointer;transition:.15s}
+.member-chip i{width:8px;height:8px;border-radius:50%;display:inline-block;flex:0 0 auto}
+.member-chip:hover{border-color:var(--accent-gold);color:var(--text-primary)}
+.member-chip.on{border-color:var(--accent-gold);background:rgba(0,82,217,.08);color:var(--accent-gold)}
+/* 歌词库 */
+.lyrics-library{margin:10px 0 4px}
+.lyrics-library-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.lyrics-library-head label{font-size:12px;color:var(--text-secondary)}
+.lyrics-count{font-size:12px;color:var(--text-secondary);font-family:"SF Mono",Consolas,monospace}
+.lyrics-search-row{display:flex;gap:6px;margin-bottom:6px;align-items:stretch}
+.lyrics-search-row input{flex:1;background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:7px 9px;border-radius:3px;font-size:12px;line-height:1.5;-webkit-appearance:none;appearance:none}
+.lyrics-search-row .button{padding:7px 12px;display:flex;align-items:center;justify-content:center;white-space:nowrap;line-height:1.5}
+.lyrics-library-select{width:100%;background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:6px;border-radius:3px;font-size:12px;margin-bottom:6px}
+/* 字号控制 */
+.font-size-control{display:flex;align-items:center;gap:4px}
+.font-size-control input[type=number]{width:56px;background:var(--surface-raised);border:1px solid var(--line);color:var(--text-primary);padding:6px 7px;border-radius:3px;font-size:12px}
+.font-size-control button{width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--text-primary);font-size:12px;border-radius:3px;line-height:1}
+.font-size-control button:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+@media(max-width:600px){.segment-row{grid-template-columns:1fr 78px 24px}}

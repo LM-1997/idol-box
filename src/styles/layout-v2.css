@@ -1,0 +1,95 @@
+/* layout-v2.css — 布局重构：顶部设置区（横向）+ 中部工作区（画面左 / 时间轴右） */
+
+/* ---- 顶部设置区：3 列等分横向排列 ---- */
+.setup-strip{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:24px;
+  background:transparent;
+  border:none;
+  box-shadow:none;
+  border-radius:0;
+  padding:0;
+  margin-bottom:24px;
+}
+.setup-col{min-width:0;overflow:hidden;display:flex;flex-direction:column;height:100%;justify-content:flex-start;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:24px}
+.setup-col .section-head p{font-size:12px}
+.setup-col .section-head{margin-bottom:8px}
+.setup-col .dropzone{min-height:64px;margin:6px 0 8px;padding:8px;gap:2px}
+.setup-col .drop-icon{font-size:12px}
+.setup-col .field-row{margin:6px 0;gap:7px}
+.setup-col .field-row-inline{display:flex;gap:8px;width:100%}
+.setup-col .field-row-inline .field-row{flex:1;margin:0}
+.setup-col .field-row input,
+.setup-col .field-row select{padding:7px 8px;font-size:12px}
+.setup-col .members-list{margin:6px 0 6px;gap:5px}
+.setup-col .member-row input[type=text]{padding:6px}
+.setup-col .segment-editor,
+.setup-col .furigana-editor{margin:6px 0;gap:5px}
+.setup-col .segment-editor{max-height:150px;overflow:auto}
+.setup-col .button{margin-top:8px}
+.setup-col .field-label{margin:6px 0 4px}
+.setup-col .member-actions{margin-top:6px;gap:6px}
+.setup-divider{border:0;border-top:1px solid var(--line);margin:12px 0 10px}
+.setup-status{grid-column:1/-1;border-top:1px solid var(--line);padding-top:8px;display:flex;align-items:center;gap:14px}
+.setup-status .status{margin:0;flex:1}
+.setup-status .unassigned-list{margin:0}
+
+/* ---- 中部工作区：画面左 / 时间轴右（等高） ---- */
+.work-area{
+  display:grid;
+  grid-template-columns:minmax(0,7fr) minmax(0,8fr);
+  gap:18px;
+  align-items:stretch;
+}
+.player-col,
+.editor-col{min-width:0;display:flex;flex-direction:column}
+.player-col{background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,.04);border-radius:6px;padding:24px;overflow:hidden}
+.editor-col{background:var(--surface);border:1px solid var(--line);box-shadow:0 1px 4px rgba(0,0,0,.04);border-radius:6px;padding:24px;overflow:hidden}
+.editor-col .timeline-editor{margin-top:0;border-top:0;padding-top:0;display:flex;flex-direction:column;flex:1;min-height:0}
+
+/* 播放台内部微调 */
+.player-col .player-wrap{aspect-ratio:16/9}
+.player-col .playback-settings{margin-bottom:0}
+
+/* 时间轴编辑器在右栏内占据更多高度（降低整体高度，保证一屏可见） */
+.editor-col .timeline-lane{height:84px}
+.editor-col .lyrics-list{max-height:300px;flex:1;min-height:120px}
+
+/* 缩放控件 */
+.timeline-zoom{
+  display:flex;align-items:center;justify-content:flex-end;gap:6px;
+  padding:8px 10px;border-top:1px solid var(--line);
+  background:var(--surface-raised);
+}
+.zoom-hint{font:12px "SF Mono",Consolas,monospace;color:var(--text-secondary);margin-right:auto}
+.zoom-level{font:12px "SF Mono",Consolas,monospace;color:var(--accent-gold);min-width:44px;text-align:center}
+.zoom-btn{width:30px;height:30px;border:1px solid var(--line);background:transparent;color:var(--text-primary);font-size:12px;border-radius:3px;line-height:1}
+.zoom-btn:hover{border-color:var(--accent-gold);color:var(--accent-gold)}
+.zoom-btn.zoom-reset{width:auto;padding:0 10px;font-size:12px}
+
+/* 时间轴可横向滚动容器 */
+.timeline-scroll{overflow-x:scroll;overflow-y:hidden}
+.timeline-ruler,.timeline-lane{min-width:100%}
+
+/* ---- 底部步骤区：与 work-area 同宽，内容靠左列 ---- */
+.bottom-area{
+  display:grid;
+  grid-template-columns:minmax(0,7fr) minmax(0,8fr);
+  gap:18px;
+  margin-top:18px;
+}
+.bottom-left{grid-column:1;min-width:0}
+.bottom-right{grid-column:2;min-width:0}
+.bottom-left .step-flow{margin-bottom:0}
+.bottom-right .step-flow{margin-bottom:0}
+
+@media(max-width:1200px){
+  .setup-strip{grid-template-columns:repeat(2,1fr)}
+  .work-area{grid-template-columns:1fr}
+  .bottom-area{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .setup-strip{grid-template-columns:1fr;padding:14px}
+  .editor-col .timeline-lane{height:96px}
+}

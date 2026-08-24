@@ -1,0 +1,8 @@
+{
+  "members": [
+    { "id": "m1", "name": "小唯", "color": "#FFFFFF" },
+    { "id": "m2", "name": "楠城", "color": "#008CFF" },
+    { "id": "m3", "name": "kyaku", "color": "#C084FC" },
+    { "id": "m4", "name": "小次", "color": "#00FF2A" }
+  ]
+}

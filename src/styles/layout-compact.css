@@ -1,0 +1,36 @@
+.topbar.hero-grid{display:flex;grid-template-columns:none;gap:0;align-items:center;margin-bottom:0}
+.app-shell{padding-top:18px}
+.stage-song-note{flex:0 1 220px!important;min-width:160px;padding:3px 14px;gap:3px}
+.stage-song-note strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.stage-song-note .note-label{font-size:12px}
+.stage-song-note span:last-child{font-size:12px}
+.control-rail{padding:16px}
+.control-rail .section-head p{margin-top:3px}
+.dropzone{min-height:82px;margin:12px 0 10px;gap:4px}
+.drop-icon{font-size:12px}
+.field-row{margin:7px 0;gap:8px}
+.field-row input,.field-row select{padding:8px 9px}
+.divider{margin:14px 0}
+.members-list{gap:5px;margin:10px 0 8px}
+.member-row input[type=text]{padding:7px}
+.member-row input[type=color]{height:28px}
+.member-actions{margin-top:7px}
+.status{margin-top:7px}
+.stage-two-tools{margin-top:14px;padding-top:14px}
+.tool-title{margin-bottom:9px}
+.field-label{margin:8px 0 5px}
+.segment-editor,.furigana-editor{gap:5px;margin:8px 0}
+.furigana-tool{margin-top:12px;padding-top:12px}
+.furigana-editor{max-height:140px}
+.button{padding:8px 11px}
+.export-note{margin:8px 0 0}
+@media(max-width:900px){.stage-song-note{margin-left:auto}}
+@media(max-width:600px){.control-rail{padding:14px}}
+
+/* Keep external resources out of the primary rehearsal workspace. */
+.related-tools{margin-top:26px;padding:20px 24px 22px;background:var(--surface)}
+.related-tools-head{margin-bottom:14px}
+.related-tools-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr)}
+.related-tool-guide .related-tool-copy small{max-width:38ch}
+@media(max-width:900px){.related-tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.related-tool-guide{grid-column:1/-1}}
+@media(max-width:600px){.related-tools{margin-top:20px;padding:16px 14px 18px}.related-tools-grid{grid-template-columns:1fr}.related-tool-guide{grid-column:auto}}

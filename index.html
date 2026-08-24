@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>地下偶像分词器</title>
+  <link rel="stylesheet" href="src/styles/tokens.css" />
+  <link rel="stylesheet" href="src/styles/main.css" />
+  <link rel="stylesheet" href="src/styles/stage2.css" />
+  <link rel="stylesheet" href="src/styles/stage3.css" />
+  <link rel="stylesheet" href="src/styles/overrides.css" />
+  <link rel="stylesheet" href="src/styles/layout-compact.css" />
+  <link rel="stylesheet" href="src/styles/timeline-editor.css" />
+  <link rel="stylesheet" href="src/styles/layout-v2.css" />
+  <link rel="stylesheet" href="src/styles/step-flow.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+KuaiLe&family=LXGW+WenKai&family=LXGW+WenKai+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
+</head>
+<body>
+  <header class="topbar hero-grid">
+    <div class="brand"><h1>地下偶像分词器</h1></div>
+    <div class="topbar-actions">
+      <button class="button button-ghost" type="button" id="idolPick" title="加载完整工程 .idol.json（含成员与歌词）">导入历史歌曲工程文件</button>
+      <input id="idolFile" class="file-input" type="file" accept=".idol.json,.json" />
+      <button class="button button-gold" id="downloadIdol" disabled title="保存完整工程 .idol.json（含成员与歌词）">保存当前歌曲工程文件</button>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <!-- 顶部设置区：三列等分 -->
+    <section class="setup-strip">
+      <!-- 第一列：上传歌词 -->
+      <div class="setup-col">
+        <div class="section-head"><span class="step">01</span><div><h2>上传歌词</h2><p>导入歌词（支持多种格式）</p></div></div>
+        <label class="dropzone" id="lrcDrop"><input id="lrcFile" type="file" accept=".lrc,.txt,.srt,.vtt,.ass,.ssa,.scc,.ttml,.dfxp,.smi,.sami,.xml" /><span class="drop-icon">↥</span><strong>拖入歌词 / 字幕文件</strong><small>支持LRC · SRT · VTT · ASS · SCC · TTML · SMI · TXT</small></label>
+        <div class="lyrics-library">
+          <div class="lyrics-library-head"><label>歌词库</label><span id="lyricsCount" class="lyrics-count"></span></div>
+          <div class="lyrics-search-row"><input id="lyricsSearch" type="search" placeholder="搜索网站上现有的歌词库" aria-label="搜索歌词库" /></div>
+          <select id="lyricsLibrary" class="lyrics-library-select" size="4" aria-label="歌词库选择"></select>
+        </div>
+        <div class="field-row"><label>曲名</label><input id="songTitle" placeholder="从元数据或文件名读取" /></div>
+        <div class="field-row-inline">
+          <div class="field-row"><label>语言</label><select id="language"><option value="ja">日语 · JA</option><option value="zh">中文 · ZH</option><option value="en">英语 · EN</option></select></div>
+          <div class="field-row"><label>编码</label><select id="encoding"><option value="utf-8">UTF-8 · 自动</option><option value="gbk">GBK / GB2312</option></select></div>
+        </div>
+        <button class="button button-gold" id="redecodeBtn" disabled>按所选编码重新解析歌词</button>
+        <div id="importStatus" class="status" aria-live="polite"></div>
+      </div>
+
+      <!-- 第二列：配置成员 + 导出分配表 -->
+      <div class="setup-col">
+        <div class="section-head"><span class="step">02</span><div><h2>设置成员与应援色</h2><p>颜色将用于歌词高亮和分配。</p></div></div>
+        <div id="membersList" class="members-list"></div>
+        <button class="button button-ghost" id="addMember">＋ 添加成员</button>
+        <div class="member-actions"><label class="button button-ghost file-button"><input id="membersFile" type="file" accept=".json" />加载已保存的成员配置</label><button class="button button-ghost" id="exportMembers">保存当前成员配置到本地</button></div>
+        <hr class="setup-divider" />
+        <div class="section-head"><span class="step">03</span><div><strong>导出歌词分配表</strong><p>导出 Excel 表后，可选择将歌词分配给对应的成员，再上传此表格即可在网页中进行进一步编辑</p></div></div>
+        <div class="member-actions"><button class="button button-gold" id="exportExcel" disabled>导出歌词分配表</button><button class="button button-ghost" id="exportPrint" disabled>导出打印/分词表</button><button class="button button-ghost" type="button" id="excelPick">上传已填写的歌词分配表</button><input id="excelFile" class="file-input" type="file" accept=".xlsx,.xlsm" /></div>
+        <div id="unassignedList" class="unassigned-list" aria-live="polite" hidden></div>
+      </div>
+
+      <!-- 第三列：假名注音 -->
+      <div class="setup-col">
+        <div class="section-head"><span class="step">04</span><div><h2>AI自动生成假名和罗马音</h2><p>AI自动生成假名/罗马音</p></div></div>
+        <div id="furiganaTool" class="furigana-tool">
+          <div class="ds-settings">
+            <div class="ds-settings-head"><span>填写DeepSeek API Key（不保存信息，仅本次使用）</span></div>
+            <div class="ds-row">
+              <label for="dsKey">DeepSeek API Key</label>
+              <input id="dsKey" type="password" placeholder="sk-..." autocomplete="off" />
+              <span class="ds-hint" id="dsKeyHint">你的 API Key 仅在本次浏览器会话中使用，不会被保存，刷新页面后需要重新填写</span>
+            </div>
+            <div class="ds-row">
+              <a class="ds-link" href="https://platform.deepseek.com" target="_blank" rel="noreferrer noopener">没有 Key？点此前往 DeepSeek 开发者平台申请 →</a>
+            </div>
+            <div class="ds-row">
+              <label for="dsModel">模型</label>
+              <select id="dsModel">
+                <option value="deepseek-v4-flash">deepseek-v4-flash（速度快，费用低，默认推荐）</option>
+                <option value="deepseek-v4-pro">deepseek-v4-pro（质量更高，速度较慢，费用较高）</option>
+              </select>
+            </div>
+          </div>
+          <button class="button button-gold" id="generateFurigana">生成假名注音</button>
+          <button class="button button-ghost" id="generateRomaji">生成罗马音</button>
+          <button class="button button-ghost" id="generateTranslation">生成翻译</button>
+          <div id="aiProgressWrap" class="ai-progress-wrap" hidden aria-live="polite">
+            <div class="ai-progress-bar"><div id="aiProgressFill" class="ai-progress-fill"></div></div>
+            <span id="aiProgressText" class="ai-progress-text">准备中…</span>
+          </div>
+          <div id="furiganaHint" class="furigana-hint" aria-live="polite"></div>
+          <div id="furiganaEditor" class="furigana-editor"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 中部工作区：画面（左）+ 时间轴编辑器（右） -->
+    <section class="work-area">
+      <div class="player-col">
+        <div class="section-head stage-head"><span class="step">05</span><div><h2>练习播放台</h2><p>上传 MV 后，歌词会随时间轴切换。</p></div><div class="hero-note stage-song-note"><span class="note-label">TODAY'S SET</span><strong id="heroSong">尚未载入歌曲</strong><span id="heroMeta">等待 LRC · 00:00.000</span></div><button class="button button-ghost stage-upload" type="button" id="mvPick">上传 MV</button><input id="mvFile" class="file-input" type="file" accept="video/*,.mp4,.webm,.mkv,.mov,.m4v" /></div>
+        <div class="player-wrap"><video id="video" controls playsinline></video><div id="videoEmpty" class="video-empty"><span>LIVE HOUSE / STANDBY</span><strong>等待视频信号</strong><small>上传本地 MV 开始练习</small></div><div id="lyricsLayer" class="lyrics-layer"></div></div>
+        <div class="timeline"><span id="currentTime">00:00.000</span><div class="timeline-track"><div id="timelineFill"></div></div><span id="duration">00:00.000</span></div>
+        <div class="playback-settings" aria-label="字幕显示设置">
+          <div class="ps-row">
+            <div class="delay-control"><span>字幕同步</span><button type="button" id="subtitleDelayMinus" title="字幕提前 0.1 秒" aria-label="字幕提前 0.1 秒">−</button><label for="subtitleDelay"><input id="subtitleDelay" type="number" min="-10" max="10" step="0.01" value="0.00" /><span>秒</span></label><button type="button" id="subtitleDelayPlus" title="字幕延后 0.1 秒" aria-label="字幕延后 0.1 秒">＋</button><output id="delayMeaning">同步</output></div>
+            <fieldset><legend>字幕位置</legend><div class="segmented"><button type="button" data-position="top">上方</button><button type="button" data-position="bottom" class="active">下方</button></div></fieldset>
+          </div>
+          <div class="ps-row">
+            <div class="font-control"><label for="fontFamily">字体</label><select id="fontFamily"><option value="思源黑体">思源黑体</option><option value="思源宋体">思源宋体</option><option value="霞鹜文楷">霞鹜文楷</option><option value="霞鹜文楷轻便版">霞鹜文楷轻便版</option></select></div>
+            <div class="font-control font-size-control"><label for="fontSize">字号</label><button type="button" id="fontSizeMinus" aria-label="缩小字幕">A−</button><input id="fontSize" type="number" min="12" max="96" step="1" value="30" /><button type="button" id="fontSizePlus" aria-label="放大字幕">A+</button></div>
+          </div>
+          <div class="ps-row">
+            <label class="member-name-toggle"><input type="checkbox" id="showRomaji" /> 显示罗马音</label>
+            <label class="member-name-toggle"><input type="checkbox" id="showMemberName" /> 显示演唱成员</label>
+          </div>
+          <div class="ps-row">
+            <div class="font-control"><label for="fontEffect">字体特效</label><select id="fontEffect"><option value="none">无</option><option value="stroke-white">白色描边</option><option value="stroke-black">黑色描边</option><option value="glow-white">白色外发光</option><option value="glow-black">黑色外发光</option><option value="shadow">投影</option><option value="stroke-gold">金色描边</option></select></div>
+            <button class="button button-ghost" id="refreshSubtitleBtn" type="button" title="手动重绘当前字幕">↻ 刷新字幕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="editor-col">
+        <div class="timeline-editor">
+          <div class="section-head timeline-editor-head"><span class="step">05</span><div><h2>歌词时间轴编辑器</h2><p>拖拽色块调时间，拖边缘调起止，拖手柄排序，下拉选成员。</p></div></div>
+          <div class="timeline-toolbar">
+            <button class="button button-ghost" id="splitLine" type="button" title="把选中这句拆成两段（可分别指派成员）" disabled>✂ 拆句</button>
+            <button class="button button-ghost" id="mergeLine" type="button" title="把选中两句合并回一句" disabled>⤿ 合并</button>
+            <label class="member-name-toggle"><input type="checkbox" id="hideTimeCol" /> 隐藏时间列</label>
+            <span class="toolbar-hint" id="timelineHint">选中一行后可用「拆句」细分，相邻两句可合并</span>
+          </div>
+          <div class="timeline-wrap">
+            <div class="timeline-scroll" id="timelineScroll">
+              <div id="timelineRuler" class="timeline-ruler"></div>
+              <div id="timelineLane" class="timeline-lane">
+                <div id="tlBlocks" class="tl-blocks"></div>
+                <div id="tlPlayhead" class="tl-playhead"></div>
+                <div id="timelineEmpty" class="timeline-empty"><span>TIMELINE / STANDBY</span><strong>等待歌词信号</strong><small>导入歌词后，这里会出现可拖拽的时间色块</small></div>
+              </div>
+            </div>
+            <div class="timeline-zoom">
+              <span class="zoom-hint" title="按住 Alt 键 + 鼠标滚轮可缩放时间轴">Alt + 滚轮缩放</span>
+              <button class="zoom-btn" type="button" id="zoomOut" title="缩小">−</button>
+              <span id="zoomLevel" class="zoom-level">100%</span>
+              <button class="zoom-btn" type="button" id="zoomIn" title="放大">＋</button>
+              <button class="zoom-btn zoom-reset" type="button" id="zoomReset" title="重置为适应宽度">适应</button>
+            </div>
+          </div>
+          <div id="timelineStatus" class="status" aria-live="polite"></div>
+          <div class="lyrics-list-head"><span>歌词时间轴</span><span id="lineCount">0 LINES</span></div>
+          <div id="lyricsList" class="lyrics-list"><div class="empty-state">导入 LRC 后，时间轴会在这里展开。</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 底部步骤区 -->
+    <div class="bottom-area">
+      <div class="bottom-left">
+        <!-- 第六步：导出成品 -->
+        <section class="step-flow" id="exportFlow">
+          <div class="section-head"><span class="step">06</span><div><h2>导出成品</h2><p>按顺序导出：工程文件 → 分配表格 → 字幕文件。</p></div></div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>导出工程文件</strong><p class="sf-summary">保存 .idol.json，下次可继续编辑</p></div>
+            <div class="sf-card-body" hidden>
+              <p>工程文件包含全部歌词、成员、分配信息和注音数据。保存后下次打开即可继续编辑，无需重新导入。</p>
+              <div class="sf-meta">文件格式：<strong>.idol.json</strong> &nbsp;|&nbsp; 包含：歌词 · 成员 · 分配 · 注音 · 播放设置</div>
+              <div class="sf-actions"><button class="sf-body-btn primary" id="exportIdolBtn" disabled>导出工程文件 (.idol.json)</button></div>
+            </div>
+            <div class="sf-card-footer" hidden>
+              <span class="sf-hint">确认已保存工程文件后，继续导出分配表格</span>
+              <button class="sf-confirm">已导出工程，导出分配表 →</button>
+            </div>
+          </div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>导出分配表格</strong><p class="sf-summary">导出 Excel 分配表，用于打印或存档</p></div>
+            <div class="sf-card-body" hidden>
+              <p>导出包含行号、时间、歌词和成员列的 Excel 表格。可用于打印、团队分发或线下填写。</p>
+              <div class="sf-meta">格式：<strong>.xlsx</strong> &nbsp;|&nbsp; 列：行号 · 时间 · 歌词 · 成员 · 备注</div>
+              <div class="sf-actions"><button class="sf-body-btn primary" id="exportXlsxBtn" disabled>导出 Excel 分配表 (.xlsx)</button></div>
+            </div>
+            <div class="sf-card-footer" hidden>
+              <span class="sf-hint">确认分配表无误后，继续导出字幕文件</span>
+              <button class="sf-confirm">已导出分配表，导出字幕 →</button>
+            </div>
+          </div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>导出成品字幕</strong><p class="sf-summary">选择格式，导出成品字幕文件</p></div>
+            <div class="sf-card-body" hidden>
+              <p>选择字幕格式并导出。导出的字幕已包含成员分配信息和当前显示设置。</p>
+              <div class="sf-format-row">
+                <select id="subExportFormat" aria-label="字幕格式">
+                  <option value="ass">ASS（推荐 · 含样式与颜色）</option>
+                  <option value="srt-color">SRT 彩色</option>
+                  <option value="srt-text">SRT 成员名</option>
+                  <option value="vtt">VTT</option>
+                </select>
+                <button class="sf-body-btn primary" id="exportSubBtn" disabled>导出字幕</button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="bottom-right">
+        <!-- 第七步：压制 MV -->
+        <section class="step-flow" id="burnFlow">
+          <div class="section-head"><span class="step">07</span><div><h2>压制成品 MV</h2><p>将字幕嵌入视频，生成带字幕的成品 MV。</p></div></div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>下载安装小丸工具箱</strong><p class="sf-summary">仅 Windows 用户需要；Mac / Linux 用户可跳过此步</p></div>
+            <div class="sf-card-body" hidden>
+              <p>小丸工具箱是一款简单易用的视频压制工具，适合不熟悉命令行的用户。下载后双击安装即可。</p>
+              <div class="sf-meta">下载地址：<a href="https://maruko.appinn.me/" target="_blank" rel="noreferrer noopener">https://maruko.appinn.me/</a>（也可从其他可靠渠道获取）</div>
+              <p>Mac / Linux 用户可跳过此步骤，后续步骤中会提供 ffmpeg 命令行替代方案。</p>
+            </div>
+            <div class="sf-card-footer" hidden>
+              <span class="sf-hint">安装完成后，下一步将下载压制所需的字幕文件</span>
+              <button class="sf-confirm">已安装，下载字幕 →</button>
+            </div>
+          </div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>下载压制用字幕</strong><p class="sf-summary">下载 ASS 字幕文件，已包含所有设置</p></div>
+            <div class="sf-card-body" hidden>
+              <p>点击下方按钮下载 ASS 字幕文件。字幕已包含你设置的成员颜色、字幕位置和延迟信息，无需额外调整。</p>
+              <div class="sf-meta" id="burnMeta"></div>
+              <div class="sf-actions"><button class="sf-body-btn primary" id="downloadBurnAss" disabled>下载压制用 ASS 字幕</button></div>
+            </div>
+            <div class="sf-card-footer" hidden>
+              <span class="sf-hint">确认字幕设置无误，准备好 MV 和字幕文件后开始压制</span>
+              <button class="sf-confirm">已下载字幕，开始压制 →</button>
+            </div>
+          </div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>拖入文件并开始压制</strong><p class="sf-summary">打开小丸工具箱，拖入 MV 和字幕文件</p></div>
+            <div class="sf-card-body" hidden>
+              <p>1. 打开小丸工具箱，选择「压制」功能<br>2. 将你的 MV 视频文件拖入「视频」栏<br>3. 将刚下载的字幕文件拖入「字幕」栏<br>4. 点击「开始压制」按钮，等待进度条走完</p>
+              <div class="sf-meta" id="burnOutput"></div>
+              <p style="color:var(--text-secondary);font-size:12px"><strong>备选方案（Mac / Linux 用户）：</strong>在终端中进入 MV 和字幕所在文件夹，执行以下 ffmpeg 命令完成压制。</p>
+              <div class="sf-code" id="burnFfmpeg"></div>
+            </div>
+            <div class="sf-card-footer" hidden>
+              <span class="sf-hint">确认压制已成功完成，将在输出目录找到成品</span>
+              <button class="sf-confirm">压制完成 ✓</button>
+            </div>
+          </div>
+          <div class="sf-card">
+            <div class="sf-card-header"><strong>完成！</strong><p class="sf-summary">在输出目录找到成品 MV</p></div>
+            <div class="sf-card-body" hidden>
+              <p>压制完成！在 MV 文件所在的文件夹中可以找到带字幕的成品 MV。现在你可以将成品分享给团队成员，或用于舞台演出。祝演出顺利！</p>
+              <div class="sf-meta" id="burnDone"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section class="related-tools" aria-labelledby="relatedToolsTitle">
+      <div class="related-tools-head">
+        <div>
+          <span class="contract-kicker">LINKS · 友情链接</span>
+          <h2 id="relatedToolsTitle">下载与扩展工具</h2>
+        </div>
+        <p>为下载、处理与歌词练习准备的外部资源。</p>
+      </div>
+      <div class="related-tools-grid">
+        <a class="related-tool" href="https://github.com/Beadd/Creamplayer" target="_blank" rel="noreferrer noopener">
+          <span class="related-tool-index">A</span>
+          <span class="related-tool-copy"><strong>Creamplayer</strong><small>下载网易云音乐内容，并支持一并获取歌词。</small></span>
+          <span class="related-tool-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="related-tool" href="https://github.com/the1812/Bilibili-Evolved" target="_blank" rel="noreferrer noopener">
+          <span class="related-tool-index">B</span>
+          <span class="related-tool-copy"><strong>Bilibili Evolved</strong><small>用于下载 Bilibili 视频；需要 Tampermonkey 或 Violentmonkey 插件。</small></span>
+          <span class="related-tool-arrow" aria-hidden="true">↗</span>
+        </a>
+        <a class="related-tool related-tool-guide" href="https://www.cnblogs.com/LM1997/articles/19315571" target="_blank" rel="noreferrer noopener">
+          <span class="related-tool-index">C</span>
+          <span class="related-tool-copy"><strong>FFmpeg + yt-dlp 配置教程</strong><small>Windows 下配置 FFmpeg 与 yt-dlp 环境变量、获取 YouTube Cookies 和下载视频。</small></span>
+          <span class="related-tool-arrow" aria-hidden="true">↗</span>
+        </a>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
