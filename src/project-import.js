@@ -1,5 +1,7 @@
 const LANGUAGES = new Set(['ja', 'zh', 'en']);
 const POSITIONS = new Set(['top', 'bottom']);
+// 时间格式：mm:ss.xxx 或 h:mm:ss.xxx（≥1h 由 formatTime 输出）
+const TIME_RE = /^\d{1,2}:\d{2}\.\d{3}$|^\d{1,2}:\d{2}:\d{2}\.\d{3}$/;
 
 export async function importProject(file) {
   let data;
@@ -21,8 +23,8 @@ export function validateProject(data) {
   });
   const lineIds = new Set();
   data.lines.forEach(line => {
-    if (!line.line_id || !/^\d{2}:\d{2}\.\d{3}$/.test(line.time) || !Array.isArray(line.segments) || !line.segments.length) throw new Error('歌词行不符合 line_id / time / segments 契约');
-    if (line.end_time !== undefined && line.end_time !== null && !/^\d{2}:\d{2}\.\d{3}$/.test(line.end_time)) throw new Error(`歌词 ${line.line_id} 的 end_time 不符合 mm:ss.xxx`);
+    if (!line.line_id || !TIME_RE.test(line.time) || !Array.isArray(line.segments) || !line.segments.length) throw new Error('歌词行不符合 line_id / time / segments 契约');
+    if (line.end_time !== undefined && line.end_time !== null && !TIME_RE.test(line.end_time)) throw new Error(`歌词 ${line.line_id} 的 end_time 不符合 mm:ss.xxx 或 h:mm:ss.xxx`);
     if (lineIds.has(line.line_id)) throw new Error(`歌词 line_id 重复：${line.line_id}`);
     lineIds.add(line.line_id);
     line.segments.forEach(segment => {
@@ -46,12 +48,11 @@ export function normalizeProject(data) {
       font_family: typeof p.font_family === 'string' ? p.font_family : '思源黑体',
       font_size: Number.isFinite(Number(p.font_size)) ? Math.max(12, Math.min(96, Number(p.font_size))) : 30,
       show_romaji: p.show_romaji !== false,
+      show_translation: p.show_translation === true,
       font_effect: typeof p.font_effect === 'string' ? p.font_effect : 'none',
     }
   };
 }
-
-export function timeToSeconds(time) { const [minutes, rest] = time.split(':'); return Number(minutes) * 60 + Number(rest); }
 
 function validatePlayer(player) {
   if (!player || typeof player !== 'object') throw new Error('player 必须是对象');

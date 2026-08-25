@@ -1,28 +1,16 @@
 import {formatTime} from './parsers.js';
 import {renderRuby, escapeHtml} from './furigana.js';
+import {FONT_FAMILY_MAP} from './font-map.js';
 
-/**
- * 下拉选项值（中文名）→ 真实 font-family 名。
- * 开源字体通过 CDN 加载（见 index.html），系统字体直接可用；
- * 无法免费加载的字体映射到相近的开源/系统字体，保证切换必有可见变化。
- */
-const FONT_FAMILY_MAP = {
-  '思源黑体': '"Noto Sans SC"',
-  '思源宋体': '"Noto Serif SC"',
-  '霞鹜文楷': '"LXGW WenKai"',
-  '霞鹜文楷轻便版': '"LXGW WenKai Mono"',
-};
-
-function renderLineText(text, reading, romaji, showRomaji) {
+function renderLineText(text, reading, romaji, showRomaji, translation, showTranslation) {
   // 同轨道副字幕：罗马音紧跟在主歌词正下方一行小字（与主字幕同一层，永不重叠）
   const hasReading = reading && reading !== text;
   const hasRomaji = showRomaji && romaji;
-  if (hasReading && hasRomaji) {
-    return `<ruby>${escapeHtml(text)}<rt>${escapeHtml(reading)}</rt></ruby><span class="romaji">${escapeHtml(romaji)}</span>`;
-  }
-  if (hasReading) return renderRuby(text, reading);
-  if (hasRomaji) return `${escapeHtml(text)}<span class="romaji">${escapeHtml(romaji)}</span>`;
-  return escapeHtml(text);
+  const hasTranslation = showTranslation && translation;
+  const ruby = hasReading ? renderRuby(text, reading) : escapeHtml(text);
+  const romajiSpan = hasRomaji ? `<span class="romaji">${escapeHtml(romaji)}</span>` : '';
+  const translationSpan = hasTranslation ? `<span class="translation">${escapeHtml(translation)}</span>` : '';
+  return `${ruby}${romajiSpan}${translationSpan}`;
 }
 
 /**
@@ -39,13 +27,19 @@ function renderLineText(text, reading, romaji, showRomaji) {
  *   getDelaySec    — () => 字幕延迟秒数
  *   onActive       — (line, index) 回调
  */
-export function setupPlayer({video, layer, list, currentTime, duration, fill, getLines, getFurigana = () => ({}), getRomaji = () => ({}), getDelaySec = () => 0, getShowMemberName = () => false, getPlayer = () => ({}), onActive}) {
+export function setupPlayer({video, layer, list, currentTime, duration, fill, getLines, getFurigana = () => ({}), getRomaji = () => ({}), getTranslations = () => ({}), getDelaySec = () => 0, getShowMemberName = () => false, getPlayer = () => ({}), onActive}) {
   if (video._lyricCleanup) video._lyricCleanup();
+
+  // 渲染节流：缓存上一次 active 索引，仅变化时才重建歌词覆盖层 DOM；
+  // timeupdate 高频触发时用 rAF 合并，避免长歌词每秒数十次全量 innerHTML。
+  let lastActive = -2;       // -2 表示尚未渲染过（区别于 active=-1 的空状态）
+  let scheduledFrame = 0;
 
   const render = rawTime => {
     const lines = getLines() || [];
     const furigana = getFurigana() || {};
     const romaji = getRomaji() || {};
+    const translations = getTranslations() || {};
     const player = getPlayer() || {};
     const lyricTime = Math.max(0, rawTime - Number(getDelaySec() || 0));
     let active = -1;
@@ -55,18 +49,28 @@ export function setupPlayer({video, layer, list, currentTime, duration, fill, ge
       const end = Number.isFinite(ln.end_seconds) ? ln.end_seconds : start + 3;
       if (lyricTime >= start && lyricTime < end) active = i;
     }
+    // 列表 active 高亮：每帧更新（轻量，仅切换 class）
     list.querySelectorAll('.lyric-row').forEach((row, index) => row.classList.toggle('active', index === active));
-    const line = lines[active];
-    const segments = line?.segments || [];
-    const showName = getShowMemberName();
-    const showRomaji = !!player.show_romaji;
-    layer.innerHTML = line
-      ? `<span class="layer-line">${segments.map(segment => renderSegment(segment, line, showName, showRomaji, furigana, romaji)).join('')}</span>`
-      : '';
+    // 歌词覆盖层：仅当 active 变化时重建（避免高频 DOM 重建）
+    if (active !== lastActive) {
+      lastActive = active;
+      const line = lines[active];
+      const segments = line?.segments || [];
+      const showName = getShowMemberName();
+      const showRomaji = !!player.show_romaji;
+      const showTranslation = !!player.show_translation;
+      layer.innerHTML = line
+        ? `<span class="layer-line">${segments.map(segment => renderSegment(segment, line, showName, showRomaji, showTranslation, furigana, romaji, translations)).join('')}</span>`
+        : '';
+      if (active >= 0) onActive?.(line, active);
+    }
+    // 时间与进度条：每帧轻量更新
     currentTime.textContent = formatTime(rawTime);
     if (video.duration) fill.style.width = `${Math.min(100, rawTime / video.duration * 100)}%`;
-    if (active >= 0) onActive?.(line, active);
   };
+
+  /** 强制重建覆盖层（外部主动调用 render 时已走 render；此函数用于 settings 变更后清缓存） */
+  const invalidate = () => { lastActive = -2; };
 
   /**
    * 渲染单个演唱分段：
@@ -74,10 +78,10 @@ export function setupPlayer({video, layer, list, currentTime, duration, fill, ge
    *  - 多成员（合唱）：渐变文字 + 成员名用「·」连接
    *  - 分段之间由外层 join('') 紧凑拼接；文本自带空隙由内容决定。
    */
-  const renderSegment = (segment, line, showName, showRomaji, furigana, romaji) => {
+  const renderSegment = (segment, line, showName, showRomaji, showTranslation, furigana, romaji, translations) => {
     const colors = Array.isArray(segment.colors) && segment.colors.length ? segment.colors : [segment.color || line.color || '#999999'];
     const name = (showName && segment.member_name) ? `${escapeHtml(segment.member_name)}：` : '';
-    const body = renderLineText(segment.text, furigana[segment.text], romaji[segment.text], showRomaji);
+    const body = renderLineText(segment.text, furigana[segment.text], romaji[segment.text], showRomaji, translations[segment.text], showTranslation);
     if (colors.length > 1) {
       // 合唱：多成员渐变文字（背景裁剪）
       const grad = `linear-gradient(90deg, ${colors.join(',')})`;
@@ -88,21 +92,28 @@ export function setupPlayer({video, layer, list, currentTime, duration, fill, ge
 
   const applyFontStyle = () => {
     const player = getPlayer() || {};
-    const family = FONT_FAMILY_MAP[player.font_family] || `"${player.font_family}"`;
-    layer.style.fontFamily = `${family}, "PingFang SC", "Microsoft YaHei", sans-serif`;
+    const family = FONT_FAMILY_MAP[player.font_family] || player.font_family || 'Noto Sans SC';
+    layer.style.fontFamily = `"${family}", "PingFang SC", "Microsoft YaHei", sans-serif`;
     layer.style.setProperty('--lyric-size', `${player.font_size || 30}px`);
     layer.dataset.fx = player.font_effect || 'none';
+    // 字体/字号/特效变更后，强制下次渲染重建覆盖层（应用新样式）
+    invalidate();
   };
 
   video._idolRender = render;
-  const onTime = () => render(video.currentTime);
+  // timeupdate 高频触发，用 rAF 合并为每帧一次
+  const onTime = () => {
+    if (scheduledFrame) return;
+    scheduledFrame = requestAnimationFrame(() => { scheduledFrame = 0; render(video.currentTime); });
+  };
   const onMeta = () => { duration.textContent = formatTime(video.duration); };
   video.addEventListener('timeupdate', onTime);
   video.addEventListener('loadedmetadata', onMeta);
   applyFontStyle();
   video._lyricCleanup = () => {
+    if (scheduledFrame) cancelAnimationFrame(scheduledFrame);
     video.removeEventListener('timeupdate', onTime);
     video.removeEventListener('loadedmetadata', onMeta);
   };
-  return { render, applyFontStyle };
+  return { render, applyFontStyle, invalidate };
 }

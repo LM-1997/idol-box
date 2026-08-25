@@ -10,6 +10,8 @@ import { initTimelineEditor } from './timeline-editor.js';
 import { setDsApiKey, setDsModel } from './glm.js';
 import { initStepFlow } from './step-flow.js';
 
+import { toast } from './toast.js';
+
 const $ = id => document.getElementById(id);
 let lastBuffer = null;
 let lastFilename = '';
@@ -18,7 +20,7 @@ let mvReady = false;
 
 const esc = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
 
-function status(message, error = false) { const el = $('importStatus'); if (el) { el.textContent = message; el.className = `status ${error ? 'error' : 'ok'}`; } }
+function status(message, error = false) { toast(message, error ? 'error' : 'ok'); }
 function download(data, name, type) { const link = document.createElement('a'); const url = URL.createObjectURL(new Blob([data], { type })); link.href = url; link.download = name; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 500); }
 
 function renderMembers() {
@@ -45,7 +47,7 @@ function renderMembers() {
 function addMember() { state.members.push({ id: `m${Date.now()}${state.members.length}`, name: '新成员', color: '#C084FC' }); renderMembers(); sync(); }
 
 function renderUnassigned(lines) { const box = $('unassignedList'); if (!box) return; if (!lines.length) { box.hidden = true; box.innerHTML = ''; return; } box.hidden = false; box.innerHTML = `<strong>未分配歌词清单（${lines.length} 行）</strong><ul>${lines.map(line => `<li><code>${line.line_id}</code> ${esc(line.text)}</li>`).join('')}</ul>`; }
-function applyPlayerSettings() { $('lyricsLayer').classList.toggle('position-top', state.player.subtitle_position === 'top'); $('lyricsLayer').classList.toggle('position-bottom', state.player.subtitle_position !== 'top'); if (document.activeElement !== $('subtitleDelay')) $('subtitleDelay').value = fmtDelay(state.player.subtitle_delay); $('delayMeaning').textContent = state.player.subtitle_delay > 0 ? `延后 ${fmtDelay(state.player.subtitle_delay)} 秒` : state.player.subtitle_delay < 0 ? `提前 ${fmtDelay(Math.abs(state.player.subtitle_delay))} 秒` : '同步'; document.querySelectorAll('[data-position]').forEach(button => button.classList.toggle('active', button.dataset.position === state.player.subtitle_position)); $('showMemberName').checked = !!state.player.show_member_name; $('showRomaji').checked = !!state.player.show_romaji; $('fontFamily').value = state.player.font_family || '思源黑体'; $('fontSize').value = state.player.font_size || 30; $('fontEffect').value = state.player.font_effect || 'none'; playerApi.applyFontStyle(); }
+function applyPlayerSettings() { $('lyricsLayer').classList.toggle('position-top', state.player.subtitle_position === 'top'); $('lyricsLayer').classList.toggle('position-bottom', state.player.subtitle_position !== 'top'); if (document.activeElement !== $('subtitleDelay')) $('subtitleDelay').value = fmtDelay(state.player.subtitle_delay); $('delayMeaning').textContent = state.player.subtitle_delay > 0 ? `延后 ${fmtDelay(state.player.subtitle_delay)} 秒` : state.player.subtitle_delay < 0 ? `提前 ${fmtDelay(Math.abs(state.player.subtitle_delay))} 秒` : '同步'; document.querySelectorAll('[data-position]').forEach(button => button.classList.toggle('active', button.dataset.position === state.player.subtitle_position)); $('showMemberName').checked = !!state.player.show_member_name; $('showRomaji').checked = !!state.player.show_romaji; $('showTranslation').checked = !!state.player.show_translation; $('fontFamily').value = state.player.font_family || '思源黑体'; $('fontSize').value = state.player.font_size || 30; $('fontEffect').value = state.player.font_effect || 'none'; playerApi.applyFontStyle(); }
 
 function updateHeroMeta() {
   const parts = [`${state.language.toUpperCase()}`, `${state.lines.length} lines`];
@@ -99,7 +101,8 @@ function setProject(project, message) {
   state.members = project.members;
   state.furigana = project.furigana || {};
   state.romaji = project.romaji || {};
-  state.player = { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, font_family: '思源黑体', font_size: 30, show_romaji: true, font_effect: 'none', ...(project.player || {}) };
+  state.translations = project.translations || {};
+  state.player = { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, font_family: '思源黑体', font_size: 30, show_romaji: true, show_translation: false, font_effect: 'none', ...(project.player || {}) };
   state.lines = project.lines.map(line => {
     const seconds = timeToSeconds(line.time);
     const endRaw = line.end_time ? timeToSeconds(line.end_time) : NaN;
@@ -140,6 +143,7 @@ function handleLyricsText(text, filename) {
   state.lines = lines;
   state.furigana = {};
   state.romaji = {};
+  state.translations = {};
   renderUnassigned([]);
   state.songTitle = $('songTitle').value = resolveSongTitle(meta, filename);
   $('heroSong').textContent = truncateTitle(state.songTitle) || '未命名歌曲';
@@ -177,6 +181,7 @@ $('subtitleDelayPlus').onclick = () => setDelay(state.player.subtitle_delay + 0.
 document.querySelectorAll('[data-position]').forEach(button => button.onclick = () => { state.player.subtitle_position = button.dataset.position; sync(); });
 $('showMemberName').onchange = event => { state.player.show_member_name = event.target.checked; sync(); };
 $('showRomaji').onchange = event => { state.player.show_romaji = event.target.checked; sync(); };
+$('showTranslation').onchange = event => { state.player.show_translation = event.target.checked; sync(); };
 $('fontFamily').onchange = event => { state.player.font_family = event.target.value; applyPlayerSettings(); };
 $('fontSize').onchange = event => { state.player.font_size = Math.max(12, Math.min(96, Number(event.target.value) || 30)); event.target.value = state.player.font_size; applyPlayerSettings(); };
 $('fontEffect').onchange = event => { state.player.font_effect = event.target.value; applyPlayerSettings(); };
@@ -258,6 +263,7 @@ const playerApi = setupPlayer({
   getLines: () => state.lines,
   getFurigana: () => state.furigana,
   getRomaji: () => state.romaji,
+  getTranslations: () => state.translations,
   getDelaySec: () => state.player.subtitle_delay,
   getShowMemberName: () => state.player.show_member_name,
   getPlayer: () => state.player,
@@ -358,7 +364,11 @@ async function loadLyricsFromLibrary() {
 }
 
 $('lyricsSearch').addEventListener('input', refreshLyricsLibrary);
-$('loadLyricsFromLib').onclick = loadLyricsFromLibrary;
+const loadLibBtn = $('loadLyricsFromLib');
+if (loadLibBtn) loadLibBtn.onclick = loadLyricsFromLibrary;
+// 双击歌词库列表项也可载入（符合直觉的交互）
+const libSelect = $('lyricsLibrary');
+if (libSelect) libSelect.addEventListener('dblclick', loadLyricsFromLibrary);
 refreshLyricsLibrary();
 
 function bindDrop(target, input, accept) { ['dragenter', 'dragover'].forEach(type => target.addEventListener(type, event => { event.preventDefault(); target.classList.add('dragover'); })); ['dragleave', 'drop'].forEach(type => target.addEventListener(type, event => { event.preventDefault(); target.classList.remove('dragover'); })); target.addEventListener('drop', event => { const file = [...event.dataTransfer.files].find(candidate => !accept || accept(candidate)); if (!file) return; const transfer = new DataTransfer(); transfer.items.add(file); input.files = transfer.files; input.dispatchEvent(new Event('change', { bubbles: true })); }); }

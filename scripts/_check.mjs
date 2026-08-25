@@ -1,6 +1,10 @@
-﻿import fs from 'fs';
-function has(f, ...subs) {
-  const s = fs.readFileSync(f, 'utf8');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const ROOT = path.resolve(__dirname, '..');
+function has(rel, ...subs) {
+  const s = fs.readFileSync(path.join(ROOT, rel), 'utf8');
   return subs.map(x => `  ${x}: ${s.includes(x) ? 'OK' : 'MISS'}`);
 }
 const groups = [

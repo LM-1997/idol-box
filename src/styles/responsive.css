@@ -1,0 +1,941 @@
+/* ================================================================
+   responsive.css — 跨平台响应式样式（移动端 / macOS / Linux）
+   ================================================================ */
+
+/* -----------------------------------------------------------------
+   0. 全局重置与平台基础
+   ----------------------------------------------------------------- */
+
+/* macOS 字体平滑 */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Linux 滚动条美化 */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: var(--text-secondary) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-secondary);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* 全局触控优化 */
+html {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 移动端安全区域 */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* 移动端输入框默认字号（viewport meta 已设置 user-scalable=no 防止缩放，故保持 12px） */
+/* 注：body 已由 main.css 统一设为 font-size:12px，此处不重复声明 */
+
+/* 按钮最小触控区域 */
+button, .button, [role="button"] {
+  min-height: 36px;
+}
+@media screen and (max-width: 768px) {
+  button, .button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* 表单元素触控优化 */
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="password"],
+select {
+  min-height: 36px;
+}
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="search"],
+  input[type="number"],
+  input[type="password"],
+  select {
+    min-height: 44px;
+  }
+}
+
+/* File input 触控区域内联 */
+.file-input {
+  display: none !important;
+}
+
+/* -----------------------------------------------------------------
+   1. 顶部导航栏 (header)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .topbar.hero-grid {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .topbar-actions {
+    flex-wrap: wrap;
+    width: 100%;
+    gap: 6px;
+  }
+  .topbar-actions .button {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 10px 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .topbar.hero-grid {
+    padding: 10px 12px;
+  }
+  .topbar-actions {
+    flex-direction: column;
+  }
+  .topbar-actions .button {
+    width: 100%;
+  }
+}
+
+/* -----------------------------------------------------------------
+   2. 主容器 (app-shell)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .app-shell {
+    padding: 12px 10px 24px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .app-shell {
+    padding: 8px 6px 20px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   3. 设置区 (setup-strip) — 三列 → 单列
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 1200px) {
+  .setup-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .setup-strip {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .setup-col {
+    padding: 16px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .setup-col {
+    padding: 12px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   4. 工作区 (work-area) — 画面 + 时间轴
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 1200px) {
+  .work-area {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .work-area {
+    gap: 12px;
+  }
+  .player-col,
+  .editor-col {
+    padding: 14px;
+  }
+  .player-col .player-wrap {
+    aspect-ratio: 16/9;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .player-col,
+  .editor-col {
+    padding: 10px;
+    border-radius: 4px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   5. 底部区域 (bottom-area) — 并列 → 堆叠
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 1200px) {
+  .bottom-area {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .bottom-left,
+  .bottom-right {
+    grid-column: auto;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .bottom-area {
+    gap: 12px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   6. 播放器控件 (playback settings)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .playback-settings {
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .ps-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .delay-control {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .delay-control input {
+    flex: 1;
+    min-width: 60px;
+  }
+  .delay-control button {
+    width: 40px;
+    height: 40px;
+  }
+  .segmented button {
+    padding: 10px 16px;
+  }
+  .font-control {
+    width: 100%;
+  }
+  .font-control select {
+    flex: 1;
+    max-width: none;
+  }
+  .font-size-control {
+    width: 100%;
+  }
+  .font-size-control input[type="number"] {
+    flex: 1;
+    width: auto;
+  }
+  .font-size-control button {
+    width: 40px;
+    height: 40px;
+  }
+  .member-name-toggle {
+    padding: 4px 0;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .playback-settings {
+    padding: 8px 10px;
+  }
+  .playback-settings fieldset {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .playback-settings legend {
+    float: none;
+    margin-bottom: 4px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   7. 时间轴编辑器
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .timeline-editor {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+  .timeline-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px;
+  }
+  .timeline-toolbar .button {
+    flex: 1 1 auto;
+    text-align: center;
+    padding: 8px 10px;
+  }
+  .timeline-toolbar .toolbar-hint {
+    width: 100%;
+    margin-left: 0;
+    text-align: center;
+  }
+  .editor-col .timeline-lane {
+    height: 100px;
+  }
+  .editor-col .lyrics-list {
+    max-height: 250px;
+  }
+  .lyric-row.timeline-row {
+    grid-template-columns: 18px 70px 70px 1fr 28px;
+    gap: 5px;
+    padding: 10px 6px;
+  }
+  .lyric-row.timeline-row .t-start,
+  .lyric-row.timeline-row .t-end {
+    width: 70px;
+    padding: 6px 4px;
+  }
+  .seg-cell {
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  .timeline-zoom {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .timeline-zoom .zoom-hint {
+    display: none;
+  }
+  .zoom-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .editor-col .timeline-lane {
+    height: 110px;
+  }
+  .editor-col .lyrics-list {
+    max-height: 200px;
+  }
+  .lyric-row.timeline-row {
+    grid-template-columns: 16px 62px 62px 1fr 26px;
+    gap: 4px;
+    padding: 8px 4px;
+  }
+  .lyric-row.timeline-row .t-start,
+  .lyric-row.timeline-row .t-end {
+    width: 62px;
+    padding: 5px 3px;
+  }
+  .timeline-wrap {
+    border-radius: 0;
+  }
+}
+
+/* 时间轴横滚触控优化 */
+.timeline-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+}
+
+/* -----------------------------------------------------------------
+   8. 成员列表
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .member-row {
+    grid-template-columns: 1fr 80px 36px 36px;
+    gap: 5px;
+  }
+  .member-row input[type="text"] {
+    padding: 8px;
+    min-height: 40px;
+  }
+  .member-row input[type="color"] {
+    height: 36px;
+    width: 36px;
+  }
+  .member-row .remove-member {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .member-row {
+    grid-template-columns: 1fr 70px 32px 32px;
+    gap: 4px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   9. 成员操作区
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .member-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .member-actions .button {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   10. 拖拽区 (dropzone)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .dropzone {
+    min-height: 80px;
+    padding: 16px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   11. 步骤卡片 (step-flow)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .step-flow {
+    border-radius: 4px;
+  }
+  .step-flow .section-head {
+    padding: 12px 14px;
+  }
+  .sf-card-header {
+    padding: 12px 14px;
+  }
+  .sf-card-body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .sf-card-footer {
+    padding-left: 14px;
+    padding-right: 14px;
+    flex-wrap: wrap;
+  }
+  .sf-card-footer .sf-hint {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .sf-card-footer .sf-confirm {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+  .sf-format-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sf-format-row select {
+    width: 100%;
+  }
+  .sf-format-row .sf-body-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .sf-card-header {
+    padding: 10px 12px;
+  }
+  .sf-card-body {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .sf-card-footer {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   12. 歌词库
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .lyrics-library {
+    margin: 8px 0 4px;
+  }
+  .lyrics-search-row {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .lyrics-search-row input {
+    width: 100%;
+  }
+  .lyrics-library-select {
+    min-height: 80px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   13. 相关链接 (related tools)
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .related-tools {
+    margin-top: 16px;
+    padding: 14px;
+  }
+  .related-tools-head {
+    display: block;
+  }
+  .related-tools-head p {
+    margin-top: 6px;
+  }
+  .related-tools-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .related-tool {
+    padding: 10px 12px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .related-tools {
+    padding: 12px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   14. 视频播放器
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .video-empty {
+    padding: 24px 12px;
+  }
+  .video-empty span {
+    font-size: 12px;
+  }
+  .video-empty strong {
+    font-size: 12px;
+  }
+  .stage-head {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .stage-upload {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+  .stage-song-note {
+    max-width: 100%;
+    flex: 1 1 100% !important;
+  }
+}
+
+/* -----------------------------------------------------------------
+   15. 歌词行
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .lyric-row {
+    grid-template-columns: 62px 1fr 14px;
+    gap: 8px;
+    padding: 10px 6px;
+  }
+  .lyric-row .time {
+    font-size: 12px;
+  }
+  .lyric-row .text {
+    font-size: 12px;
+  }
+  .lyrics-list {
+    max-height: 280px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .lyric-row {
+    grid-template-columns: 52px 1fr 12px;
+    gap: 6px;
+    padding: 8px 4px;
+  }
+  .lyrics-list {
+    max-height: 220px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   16. 假名编辑器
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .furigana-row {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+  .furigana-editor {
+    max-height: 180px;
+  }
+  .segment-row {
+    grid-template-columns: 1fr 90px 30px;
+    gap: 5px;
+  }
+  .ds-settings {
+    padding: 8px 10px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   17. 导出区域
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .export-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .export-actions select {
+    min-width: 0;
+    width: 100%;
+  }
+  .burn-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   18. 状态栏和提示
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .status {
+    padding: 6px 0;
+  }
+  .autosave-banner {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .autosave-banner span {
+    flex: 1 1 100%;
+  }
+  .autosave-banner .button {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* -----------------------------------------------------------------
+   19. AI 进度条
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .ai-progress-wrap {
+    margin: 8px 0 2px;
+  }
+  .ai-progress-bar {
+    height: 8px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   20. 分隔线
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 768px) {
+  .setup-divider {
+    margin: 10px 0 8px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   21. 内联字段行
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 480px) {
+  .field-row-inline {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .field-row-inline .field-row {
+    width: 100%;
+  }
+}
+
+/* -----------------------------------------------------------------
+   22. 视频播放器 — macOS Safari 兼容
+   ----------------------------------------------------------------- */
+
+/* Safari 兼容：video controls 样式 */
+@supports (-webkit-appearance: -apple-pay-button) {
+  video::-webkit-media-controls-panel {
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+  }
+  video::-webkit-media-controls-play-button {
+    color: white;
+  }
+}
+
+/* macOS Safari 弹性滚动 */
+.work-area,
+.setup-strip,
+.bottom-area {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* -----------------------------------------------------------------
+   23. 移动端 — 隐藏非必要的 UI 元素
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 480px) {
+  .stage-song-note .note-label {
+    display: none;
+  }
+  .hero-note {
+    max-width: 100%;
+  }
+}
+
+/* -----------------------------------------------------------------
+   24. 打印样式
+   ----------------------------------------------------------------- */
+
+@media print {
+  .topbar,
+  .topbar-actions,
+  .playback-settings,
+  .timeline-wrap,
+  .timeline-zoom,
+  .timeline-toolbar,
+  .related-tools,
+  .stage-upload,
+  #mvPick,
+  .button-ghost,
+  .button-gold {
+    display: none !important;
+  }
+  .app-shell {
+    padding: 0;
+  }
+  .setup-strip,
+  .work-area,
+  .bottom-area {
+    display: block;
+  }
+  body {
+    background: white;
+    color: black;
+    font-size: 10pt;
+  }
+  .lyrics-list {
+    max-height: none;
+    overflow: visible;
+  }
+  .lyric-row {
+    break-inside: avoid;
+  }
+}
+
+/* -----------------------------------------------------------------
+   25. macOS 全屏 / 分屏兼容
+   ----------------------------------------------------------------- */
+
+/* macOS 窗口化时防止内容被圆角截断 */
+@supports (-webkit-backdrop-filter: blur(10px)) {
+  .app-shell {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+  }
+}
+
+/* -----------------------------------------------------------------
+   26. Linux 字体回退链
+   ----------------------------------------------------------------- */
+
+/* Linux 系统通常没有 PingFang SC / Microsoft YaHei，需补充 Noto 系列 */
+@supports not (font: -apple-system-body) {
+  html, body {
+    font-family: "Noto Sans SC", "Noto Sans CJK SC", "WenQuanYi Micro Hei", "WenQuanYi Zen Hei", sans-serif;
+  }
+  .lyrics-layer {
+    font-family: var(--lyric-font, "Noto Sans SC"), "Noto Sans CJK SC", "WenQuanYi Micro Hei", sans-serif;
+  }
+}
+
+/* -----------------------------------------------------------------
+   27. 高 DPI 屏幕优化
+   ----------------------------------------------------------------- */
+
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .tl-block {
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  }
+  .button {
+    letter-spacing: 0.02em;
+  }
+}
+
+/* -----------------------------------------------------------------
+   28. 减少动画偏好
+   ----------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .tl-playhead {
+    transition: none;
+  }
+}
+
+/* -----------------------------------------------------------------
+   29. 横屏手机优化
+   ----------------------------------------------------------------- */
+
+@media screen and (max-width: 900px) and (orientation: landscape) {
+  .setup-strip {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .setup-col {
+    padding: 10px;
+  }
+  .work-area {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .player-col,
+  .editor-col {
+    padding: 10px;
+  }
+  .bottom-area {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+}
+
+/* -----------------------------------------------------------------
+   30. 触控点击反馈
+   ----------------------------------------------------------------- */
+
+.touch-active {
+  opacity: 0.7;
+  transform: scale(0.97);
+  transition: opacity 0.1s, transform 0.1s;
+}
+
+/* -----------------------------------------------------------------
+   31. 平台特定样式
+   ----------------------------------------------------------------- */
+
+/* iOS Safari 特定修复 */
+.platform-ios .lyrics-list,
+.platform-ios .furigana-editor,
+.platform-ios .timeline-scroll {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS 视频全屏退出恢复 */
+.platform-ios video::-webkit-media-controls-fullscreen-button {
+  display: block;
+}
+
+/* Android Chrome 地址栏颜色 */
+.platform-android {
+  --safe-bottom: 0px;
+}
+
+/* macOS 字体渲染优化 */
+.platform-mac body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Linux 滚动条始终可见 */
+.platform-linux ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.platform-linux ::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+.platform-linux ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+/* 移动端全局优化 */
+.platform-mobile .lyrics-list,
+.platform-mobile .furigana-editor,
+.platform-mobile .timeline-scroll,
+.platform-mobile .lyrics-library-select {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* 触控设备增强交互区域 */
+.platform-touch .member-chip {
+  min-height: 32px;
+  padding: 4px 10px;
+}
+
+/* 桌面端 */
+.platform-desktop body {
+  font-size: 12px;
+}
+
+/* -----------------------------------------------------------------
+   32. 平板优化 (768px - 1024px)
+   ----------------------------------------------------------------- */
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .setup-strip {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  .work-area {
+    grid-template-columns: 1fr;
+  }
+  .bottom-area {
+    grid-template-columns: 1fr;
+  }
+  .bottom-left,
+  .bottom-right {
+    grid-column: auto;
+  }
+}

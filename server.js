@@ -85,13 +85,14 @@ function listLyrics(q) {
 function readLyrics(name) {
   const safe = path.basename(String(name));
   // 允许按相对路径（子目录）读取，但必须仍在 lyrics/ 内
-  let full = path.join(LYRICS_ROOT, String(name));
-  if (!full.startsWith(LYRICS_ROOT) || !fs.existsSync(full)) {
+  const full = path.resolve(LYRICS_ROOT, String(name));
+  const rel = path.relative(LYRICS_ROOT, full);
+  if (rel.startsWith('..') || path.isAbsolute(rel) || !fs.existsSync(full)) {
     // 回退：仅在歌词目录里按文件名查找
     const byName = scanLyrics().find(f => f.name === safe || f.rel === String(name));
-    full = byName ? path.join(LYRICS_ROOT, byName.rel) : null;
+    if (!byName) throw new Error(`歌词文件不存在：${safe}`);
+    return decodeBuf(fs.readFileSync(path.join(LYRICS_ROOT, byName.rel)));
   }
-  if (!full || !full.startsWith(LYRICS_ROOT) || !fs.existsSync(full)) throw new Error(`歌词文件不存在：${safe}`);
   return decodeBuf(fs.readFileSync(full));
 }
 
@@ -111,9 +112,14 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/lyrics' && req.method === 'GET') {
       const file = url.searchParams.get('file');
       if (file) {
-        const content = readLyrics(file);
-        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-        return res.end(content);
+        try {
+          const content = readLyrics(file);
+          res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+          return res.end(content);
+        } catch {
+          res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+          return res.end('Not found');
+        }
       }
       const q = url.searchParams.get('q') || '';
       return sendJson(200, { files: listLyrics(q) });
@@ -122,11 +128,15 @@ const server = http.createServer(async (req, res) => {
     // 静态文件
     let rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
     const base = path.basename(rel);
-    if (base === 'server.js') {
+    // 黑名单：服务端脚本、调试脚本、依赖描述、工程元数据
+    if (base === 'server.js' || base === '_check.mjs' || base === '_debug_glm.mjs'
+        || base === 'package.json' || base === 'package-lock.json' || base === 'members.json') {
       res.writeHead(404); return res.end('Not found');
     }
-    const filePath = path.join(ROOT, rel);
-    if (!filePath.startsWith(ROOT) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    // 路径穿越加固：resolve 后校验相对路径不得跳出 ROOT
+    const filePath = path.resolve(ROOT, rel);
+    const fileRel = path.relative(ROOT, filePath);
+    if (fileRel.startsWith('..') || path.isAbsolute(fileRel) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
       res.writeHead(404); return res.end('Not found');
     }
     const ext = path.extname(filePath).toLowerCase();
@@ -137,7 +147,10 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+// 仅绑定回环地址，避免局域网意外暴露（如需局域网访问可改为 '0.0.0.0'）
+const HOST = process.env.HOST || '127.0.0.1';
+server.listen(PORT, HOST, () => {
   console.log(`Idol Cue server → http://localhost:${PORT}`);
   console.log(`  歌词库目录：${LYRICS_DIR}`);
+  console.log(`  监听：${HOST}（仅本机可访问）`);
 });

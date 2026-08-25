@@ -109,6 +109,8 @@ export async function generateReadings(words, { language = 'ja' } = {}) {
   log.push(`模型：${dsModel}；语言：${language}；片段数：${clean.length}`);
 
   let res;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
   try {
     res = await fetch(DEEPSEEK_ENDPOINT, {
       method: 'POST',
@@ -125,24 +127,32 @@ export async function generateReadings(words, { language = 'ja' } = {}) {
         temperature: 0.2,
         response_format: { type: 'json_object' },
       }),
+      signal: controller.signal,
     });
   } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      log.push(`[${stamp()}] 注音请求超时（60秒）`);
+      throw new Error('注音请求超时（60秒），请稍后重试');
+    }
     // fetch 级别的错误（网络断开、CORS 等）
     log.push(`[${stamp()}] fetch 出错：${err.message || err}`);
     const corsMsg = classifyError(err);
     if (corsMsg) throw new Error(corsMsg);
     throw new Error(`网络请求失败：${err.message || '未知错误'}`);
   }
+  clearTimeout(timeout);
 
   log.push(`DeepSeek 响应：HTTP ${res.status}`);
 
   let body = null;
+  let rawText = '';
   try {
-    body = await res.json();
+    rawText = await res.text();
+    body = JSON.parse(rawText);
   } catch {
-    // 响应体不是 JSON（极少见）
-    const text = await res.text();
-    log.push(`非 JSON 响应（前 300 字）：${String(text || '').slice(0, 300)}`);
+    // 响应体不是 JSON（极少见），保留原始文本用于日志
+    log.push(`非 JSON 响应（前 300 字）：${String(rawText || '').slice(0, 300)}`);
     throw new Error(`DeepSeek API 返回了非预期的响应格式（HTTP ${res.status}）`);
   }
 
@@ -166,7 +176,14 @@ export async function generateReadings(words, { language = 'ja' } = {}) {
     parsed = m ? JSON.parse(m[0]) : null;
   }
 
-  const list = Array.isArray(parsed?.readings) ? parsed.readings : [];
+  // 诊断：记录解析后的顶层结构
+  if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+    log.push(`解析后顶层键：${Object.keys(parsed).join(', ') || '(空对象)'}`);
+  }
+
+  const list = Array.isArray(parsed?.readings) ? parsed.readings
+    : Array.isArray(parsed) ? parsed
+    : [];
   log.push(`解析到 readings：${list.length} 条`);
 
   const result = alignReadings(clean, list);
@@ -239,7 +256,11 @@ export async function translateLyrics(texts, { language = 'ja' } = {}) {
     throw new Error('请先在上方填写 DeepSeek API Key');
   }
 
-  const langName = language === 'ja' ? '日语' : language === 'zh' ? '中文' : '英语';
+  if (language === 'zh') {
+    throw new Error('当前歌词已是中文，无需翻译');
+  }
+
+  const langName = language === 'ja' ? '日语' : '英语';
 
   const system = '你是歌词翻译助手。严格只输出 JSON，不要任何解释、不要 markdown 代码块。格式：{"translations":[{"text":"原片段","translation":"简体中文翻译"}]}。text 必须与输入片段逐字完全一致。每个输入片段只输出一条翻译，不要拆分。将原文翻译为自然流畅的简体中文，保留歌词的意境和韵律。';
   const user = `请将以下${langName}歌词片段翻译为简体中文（每段整体翻译，不要拆分）：\n${clean.join('\n')}`;
@@ -248,6 +269,8 @@ export async function translateLyrics(texts, { language = 'ja' } = {}) {
   log.push(`模型：${dsModel}；语言：${language}；片段数：${clean.length}`);
 
   let res;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 60000);
   try {
     res = await fetch(DEEPSEEK_ENDPOINT, {
       method: 'POST',
@@ -264,22 +287,30 @@ export async function translateLyrics(texts, { language = 'ja' } = {}) {
         temperature: 0.3,
         response_format: { type: 'json_object' },
       }),
+      signal: controller.signal,
     });
   } catch (err) {
+    clearTimeout(timeout);
+    if (err.name === 'AbortError') {
+      log.push(`[${stamp()}] 翻译请求超时（60秒）`);
+      throw new Error('翻译请求超时（60秒），请稍后重试');
+    }
     log.push(`[${stamp()}] fetch 出错：${err.message || err}`);
     const corsMsg = classifyError(err);
     if (corsMsg) throw new Error(corsMsg);
     throw new Error(`网络请求失败：${err.message || '未知错误'}`);
   }
+  clearTimeout(timeout);
 
   log.push(`DeepSeek 响应：HTTP ${res.status}`);
 
   let body = null;
+  let rawText = '';
   try {
-    body = await res.json();
+    rawText = await res.text();
+    body = JSON.parse(rawText);
   } catch {
-    const text = await res.text();
-    log.push(`非 JSON 响应（前 300 字）：${String(text || '').slice(0, 300)}`);
+    log.push(`非 JSON 响应（前 300 字）：${String(rawText || '').slice(0, 300)}`);
     throw new Error(`DeepSeek API 返回了非预期的响应格式（HTTP ${res.status}）`);
   }
 
@@ -301,7 +332,39 @@ export async function translateLyrics(texts, { language = 'ja' } = {}) {
     parsed = m ? JSON.parse(m[0]) : null;
   }
 
-  const list = Array.isArray(parsed?.translations) ? parsed.translations : [];
+  // 诊断：记录解析后的顶层结构，便于排查模型返回格式
+  if (parsed && typeof parsed === 'object') {
+    log.push(`解析后顶层键：${Object.keys(parsed).join(', ') || '(空对象)'}`);
+    if (Array.isArray(parsed)) log.push(`注意：模型返回了数组而非对象，长度=${parsed.length}`);
+  }
+
+  // 尝试多种可能的键名（模型可能不按 system prompt 返回）
+  let list = Array.isArray(parsed?.translations) ? parsed.translations
+    : Array.isArray(parsed?.translation) ? parsed.translation
+    : Array.isArray(parsed?.translated) ? parsed.translated
+    : Array.isArray(parsed?.results) ? parsed.results
+    : Array.isArray(parsed) ? parsed  // 模型直接返回了数组
+    : [];
+
+  // 如果 list 有数据但字段名不是 text/translation，尝试做字段映射
+  if (list.length > 0) {
+    const first = list[0];
+    if (first && typeof first === 'object') {
+      const keys = Object.keys(first);
+      log.push(`模型返回的每条记录键名：${keys.join(', ')}`);
+      // 自动映射常见替代字段名
+      if (!('text' in first) || !('translation' in first)) {
+        const textKey = keys.find(k => /text|original|source|input|origin/i.test(k)) || keys[0];
+        const transKey = keys.find(k => /translat|target|output|result|chinese/i.test(k)) || (keys.length > 1 ? keys[1] : keys[0]);
+        log.push(`字段映射：text←${textKey}, translation←${transKey}`);
+        list = list.map(item => ({
+          text: item[textKey] || '',
+          translation: item[transKey] || '',
+        }));
+      }
+    }
+  }
+
   log.push(`解析到 translations：${list.length} 条`);
 
   const result = alignTranslations(clean, list);
@@ -315,9 +378,22 @@ export async function translateLyrics(texts, { language = 'ja' } = {}) {
 function alignTranslations(texts, list) {
   const used = new Set();
   const exact = new Map(list.map(r => [String(r?.text || ''), r]));
-  return texts.map(w => {
+  return texts.map((w, i) => {
     const r = exact.get(w);
     if (r && !used.has(w)) { used.add(w); return { text: w, translation: r.translation || '' }; }
+    // 兜底1：模型拆词了，把 text 是 w 子串的词按返回顺序拼接
+    const parts = list.filter(p => { const t = String(p?.text || ''); return t && w.includes(t) && !used.has(t); });
+    if (parts.length) {
+      parts.forEach(p => used.add(String(p.text)));
+      return { text: w, translation: parts.map(p => p.translation || '').join('') };
+    }
+    // 兜底2：模型返回的 text 与输入完全不匹配，按顺序使用尚未匹配的翻译
+    const unmatched = list.filter(p => !used.has(String(p?.text || '')));
+    if (unmatched.length > 0) {
+      const fallback = unmatched[0];
+      used.add(String(fallback.text || ''));
+      return { text: w, translation: fallback.translation || '' };
+    }
     return { text: w, translation: '' };
   });
 }

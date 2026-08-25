@@ -13,11 +13,12 @@
   <link rel="stylesheet" href="src/styles/timeline-editor.css" />
   <link rel="stylesheet" href="src/styles/layout-v2.css" />
   <link rel="stylesheet" href="src/styles/step-flow.css" />
+  <link rel="stylesheet" href="src/styles/toast.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+KuaiLe&family=LXGW+WenKai&family=LXGW+WenKai+Mono&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" integrity="sha384-Pqp51FUN2/qzfxZxBCtF0stpc9ONI6MYZpVqmo8m20SoaQCzf+arZvACkLkirlPz" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js" integrity="sha384-DgmC6Xe2bSN2WjTDXzWYbUbxyhNP+NNkGDR/g78pCXV7E7rcVTGxVg0uIVCUUcBc" crossorigin="anonymous"></script>
 </head>
 <body>
   <header class="topbar hero-grid">
@@ -38,7 +39,7 @@
         <label class="dropzone" id="lrcDrop"><input id="lrcFile" type="file" accept=".lrc,.txt,.srt,.vtt,.ass,.ssa,.scc,.ttml,.dfxp,.smi,.sami,.xml" /><span class="drop-icon">↥</span><strong>拖入歌词 / 字幕文件</strong><small>支持LRC · SRT · VTT · ASS · SCC · TTML · SMI · TXT</small></label>
         <div class="lyrics-library">
           <div class="lyrics-library-head"><label>歌词库</label><span id="lyricsCount" class="lyrics-count"></span></div>
-          <div class="lyrics-search-row"><input id="lyricsSearch" type="search" placeholder="搜索网站上现有的歌词库" aria-label="搜索歌词库" /></div>
+          <div class="lyrics-search-row"><input id="lyricsSearch" type="search" placeholder="搜索网站上现有的歌词库" aria-label="搜索歌词库" /><button class="button button-ghost" type="button" id="loadLyricsFromLib" title="载入选中的歌词文件">载入</button></div>
           <select id="lyricsLibrary" class="lyrics-library-select" size="4" aria-label="歌词库选择"></select>
         </div>
         <div class="field-row"><label>曲名</label><input id="songTitle" placeholder="从元数据或文件名读取" /></div>
@@ -47,8 +48,7 @@
           <div class="field-row"><label>编码</label><select id="encoding"><option value="utf-8">UTF-8 · 自动</option><option value="gbk">GBK / GB2312</option></select></div>
         </div>
         <button class="button button-gold" id="redecodeBtn" disabled>按所选编码重新解析歌词</button>
-        <div id="importStatus" class="status" aria-live="polite"></div>
-      </div>
+        </div>
 
       <!-- 第二列：配置成员 + 导出分配表 -->
       <div class="setup-col">
@@ -57,7 +57,7 @@
         <button class="button button-ghost" id="addMember">＋ 添加成员</button>
         <div class="member-actions"><label class="button button-ghost file-button"><input id="membersFile" type="file" accept=".json" />加载已保存的成员配置</label><button class="button button-ghost" id="exportMembers">保存当前成员配置到本地</button></div>
         <hr class="setup-divider" />
-        <div class="section-head"><span class="step">03</span><div><strong>导出歌词分配表</strong><p>导出 Excel 表后，可选择将歌词分配给对应的成员，再上传此表格即可在网页中进行进一步编辑</p></div></div>
+        <div class="section-head"><span class="step">03</span><div><h2>导出歌词分配表</h2><p>导出 Excel 表后，可选择将歌词分配给对应的成员，再上传此表格即可在网页中进行进一步编辑</p></div></div>
         <div class="member-actions"><button class="button button-gold" id="exportExcel" disabled>导出歌词分配表</button><button class="button button-ghost" id="exportPrint" disabled>导出打印/分词表</button><button class="button button-ghost" type="button" id="excelPick">上传已填写的歌词分配表</button><input id="excelFile" class="file-input" type="file" accept=".xlsx,.xlsm" /></div>
         <div id="unassignedList" class="unassigned-list" aria-live="polite" hidden></div>
       </div>
@@ -87,10 +87,6 @@
           <button class="button button-gold" id="generateFurigana">生成假名注音</button>
           <button class="button button-ghost" id="generateRomaji">生成罗马音</button>
           <button class="button button-ghost" id="generateTranslation">生成翻译</button>
-          <div id="aiProgressWrap" class="ai-progress-wrap" hidden aria-live="polite">
-            <div class="ai-progress-bar"><div id="aiProgressFill" class="ai-progress-fill"></div></div>
-            <span id="aiProgressText" class="ai-progress-text">准备中…</span>
-          </div>
           <div id="furiganaHint" class="furigana-hint" aria-live="polite"></div>
           <div id="furiganaEditor" class="furigana-editor"></div>
         </div>
@@ -114,6 +110,7 @@
           </div>
           <div class="ps-row">
             <label class="member-name-toggle"><input type="checkbox" id="showRomaji" /> 显示罗马音</label>
+            <label class="member-name-toggle"><input type="checkbox" id="showTranslation" /> 显示翻译</label>
             <label class="member-name-toggle"><input type="checkbox" id="showMemberName" /> 显示演唱成员</label>
           </div>
           <div class="ps-row">
@@ -149,7 +146,6 @@
               <button class="zoom-btn zoom-reset" type="button" id="zoomReset" title="重置为适应宽度">适应</button>
             </div>
           </div>
-          <div id="timelineStatus" class="status" aria-live="polite"></div>
           <div class="lyrics-list-head"><span>歌词时间轴</span><span id="lineCount">0 LINES</span></div>
           <div id="lyricsList" class="lyrics-list"><div class="empty-state">导入 LRC 后，时间轴会在这里展开。</div></div>
         </div>

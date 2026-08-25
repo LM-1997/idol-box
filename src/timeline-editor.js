@@ -21,6 +21,7 @@
 import { state } from './store.js';
 import { timeToSeconds, formatTime } from './parsers.js';
 import { memberChipsHtml, bindMemberChips, segMemberIds } from './member-chips.js';
+import { toast } from './toast.js';
 
 const $ = id => document.getElementById(id);
 const TIME_RE = /^\d{2}:\d{2}\.\d{3}$/; // mm:ss.xxx
@@ -60,14 +61,7 @@ function contrastColor(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? '#1a1420' : '#ffffff';
 }
 
-function warn(msg) {
-  const el = $('timelineStatus');
-  if (!el) return;
-  el.textContent = msg;
-  el.classList.add('warn');
-  clearTimeout(warnTimer);
-  warnTimer = setTimeout(() => { el.textContent = ''; el.classList.remove('warn'); }, 4200);
-}
+function warn(msg) { toast(msg, 'warn'); }
 
 function blockEl(line) { return $('tlBlocks')?.querySelector(`.tl-block[data-id="${line.line_id}"]`); }
 
@@ -564,9 +558,19 @@ function checkOverlap(index) {
 // ---------------------------------------------------------------------------
 
 export function initTimelineEditor({ getVideo: gv, onChanged: oc, onSubtitleEdit: os }) {
+  // 初始化（含重新初始化时重置状态，避免残留）
   getVideo = gv;
   onChanged = oc;
   onSubtitleEdit = os;
+  sortable = null;
+  pendingDelete = null;
+  if (warnTimer) { clearTimeout(warnTimer); warnTimer = null; }
+  dragging = null;
+  duration = 5;
+  zoom = 1;
+  following = false;
+  selectedIndex = -1;
+  hideTime = false;
   const video = getVideo?.();
   const onTime = () => updatePlayhead();
   const onMeta = () => { computeDuration(); applyZoom(); renderBlocks(); updatePlayhead(); };
@@ -636,6 +640,12 @@ export function initTimelineEditor({ getVideo: gv, onChanged: oc, onSubtitleEdit
         video.removeEventListener('ended', onPause);
       }
       if (scroll) scroll.removeEventListener('wheel', onWheel);
+      // 重置残留状态，避免重新初始化时脏数据
+      if (warnTimer) { clearTimeout(warnTimer); warnTimer = null; }
+      dragging = null;
+      pendingDelete = null;
+      following = false;
+      selectedIndex = -1;
     },
   };
 }
