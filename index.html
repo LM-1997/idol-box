@@ -58,7 +58,7 @@
         <div class="member-actions"><label class="button button-ghost file-button"><input id="membersFile" type="file" accept=".json" />加载已保存的成员配置</label><button class="button button-ghost" id="exportMembers">保存当前成员配置到本地</button></div>
         <hr class="setup-divider" />
         <div class="section-head"><span class="step">03</span><div><h2>导出歌词分配表</h2><p>导出 Excel 表后，可选择将歌词分配给对应的成员，再上传此表格即可在网页中进行进一步编辑</p></div></div>
-        <div class="member-actions"><button class="button button-gold" id="exportExcel" disabled>导出歌词分配表</button><button class="button button-ghost" id="exportPrint" disabled>导出打印/分词表</button><button class="button button-ghost" type="button" id="excelPick">上传已填写的歌词分配表</button><input id="excelFile" class="file-input" type="file" accept=".xlsx,.xlsm" /></div>
+        <div class="member-actions"><button class="button button-gold" id="exportExcel" disabled>导出歌词分配表手动填写</button><button class="button button-ghost" type="button" id="excelPick">上传已填写的歌词分配表</button><button class="button button-ghost" id="exportPrint" disabled>导出打印/分词表</button><input id="excelFile" class="file-input" type="file" accept=".xlsx,.xlsm" /></div>
         <div id="unassignedList" class="unassigned-list" aria-live="polite" hidden></div>
       </div>
 
@@ -109,6 +109,7 @@
             <div class="font-control font-size-control"><label for="fontSize">字号</label><button type="button" id="fontSizeMinus" aria-label="缩小字幕">A−</button><input id="fontSize" type="number" min="12" max="96" step="1" value="30" /><button type="button" id="fontSizePlus" aria-label="放大字幕">A+</button></div>
           </div>
           <div class="ps-row">
+            <label class="member-name-toggle"><input type="checkbox" id="showFurigana" checked /> 显示假名注音</label>
             <label class="member-name-toggle"><input type="checkbox" id="showRomaji" /> 显示罗马音</label>
             <label class="member-name-toggle"><input type="checkbox" id="showTranslation" /> 显示翻译</label>
             <label class="member-name-toggle"><input type="checkbox" id="showMemberName" /> 显示演唱成员</label>

@@ -102,7 +102,7 @@ function setProject(project, message) {
   state.furigana = project.furigana || {};
   state.romaji = project.romaji || {};
   state.translations = project.translations || {};
-  state.player = { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, font_family: '思源黑体', font_size: 30, show_romaji: true, show_translation: false, font_effect: 'none', ...(project.player || {}) };
+  state.player = { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, show_furigana: true, font_family: '思源黑体', font_size: 30, show_romaji: true, show_translation: false, font_effect: 'none', ...(project.player || {}) };
   state.lines = project.lines.map(line => {
     const seconds = timeToSeconds(line.time);
     const endRaw = line.end_time ? timeToSeconds(line.end_time) : NaN;
@@ -179,6 +179,7 @@ $('subtitleDelay').onblur = () => { $('subtitleDelay').value = fmtDelay(state.pl
 $('subtitleDelayMinus').onclick = () => setDelay(state.player.subtitle_delay - 0.1);
 $('subtitleDelayPlus').onclick = () => setDelay(state.player.subtitle_delay + 0.1);
 document.querySelectorAll('[data-position]').forEach(button => button.onclick = () => { state.player.subtitle_position = button.dataset.position; sync(); });
+$('showFurigana').onchange = event => { state.player.show_furigana = event.target.checked; sync(); };
 $('showMemberName').onchange = event => { state.player.show_member_name = event.target.checked; sync(); };
 $('showRomaji').onchange = event => { state.player.show_romaji = event.target.checked; sync(); };
 $('showTranslation').onchange = event => { state.player.show_translation = event.target.checked; sync(); };

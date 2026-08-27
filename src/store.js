@@ -25,7 +25,7 @@ export const state = {
   furigana: {},
   romaji: {},
   translations: {},
-  player: { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, font_family: '思源黑体', font_size: 30, show_romaji: true, show_translation: false, font_effect: 'none' },
+  player: { subtitle_delay: 0, subtitle_position: 'bottom', show_member_name: false, show_furigana: true, font_family: '思源黑体', font_size: 30, show_romaji: true, show_translation: false, font_effect: 'none' },
 };
 
 /** 完整工程数据（用于导出 .idol.json；不含运行时 blob） */

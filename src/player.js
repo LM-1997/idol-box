@@ -2,9 +2,9 @@ import {formatTime} from './parsers.js';
 import {renderRuby, escapeHtml} from './furigana.js';
 import {FONT_FAMILY_MAP} from './font-map.js';
 
-function renderLineText(text, reading, romaji, showRomaji, translation, showTranslation) {
+function renderLineText(text, reading, showFurigana, romaji, showRomaji, translation, showTranslation) {
   // 同轨道副字幕：罗马音紧跟在主歌词正下方一行小字（与主字幕同一层，永不重叠）
-  const hasReading = reading && reading !== text;
+  const hasReading = showFurigana && reading && reading !== text;
   const hasRomaji = showRomaji && romaji;
   const hasTranslation = showTranslation && translation;
   const ruby = hasReading ? renderRuby(text, reading) : escapeHtml(text);
@@ -57,10 +57,11 @@ export function setupPlayer({video, layer, list, currentTime, duration, fill, ge
       const line = lines[active];
       const segments = line?.segments || [];
       const showName = getShowMemberName();
+      const showFurigana = player.show_furigana !== false;
       const showRomaji = !!player.show_romaji;
       const showTranslation = !!player.show_translation;
       layer.innerHTML = line
-        ? `<span class="layer-line">${segments.map(segment => renderSegment(segment, line, showName, showRomaji, showTranslation, furigana, romaji, translations)).join('')}</span>`
+        ? `<span class="layer-line">${segments.map(segment => renderSegment(segment, line, showName, showFurigana, showRomaji, showTranslation, furigana, romaji, translations)).join('')}</span>`
         : '';
       if (active >= 0) onActive?.(line, active);
     }
@@ -78,10 +79,10 @@ export function setupPlayer({video, layer, list, currentTime, duration, fill, ge
    *  - 多成员（合唱）：渐变文字 + 成员名用「·」连接
    *  - 分段之间由外层 join('') 紧凑拼接；文本自带空隙由内容决定。
    */
-  const renderSegment = (segment, line, showName, showRomaji, showTranslation, furigana, romaji, translations) => {
+  const renderSegment = (segment, line, showName, showFurigana, showRomaji, showTranslation, furigana, romaji, translations) => {
     const colors = Array.isArray(segment.colors) && segment.colors.length ? segment.colors : [segment.color || line.color || '#999999'];
     const name = (showName && segment.member_name) ? `${escapeHtml(segment.member_name)}：` : '';
-    const body = renderLineText(segment.text, furigana[segment.text], romaji[segment.text], showRomaji, translations[segment.text], showTranslation);
+    const body = renderLineText(segment.text, furigana[segment.text], showFurigana, romaji[segment.text], showRomaji, translations[segment.text], showTranslation);
     if (colors.length > 1) {
       // 合唱：多成员渐变文字（背景裁剪）
       const grad = `linear-gradient(90deg, ${colors.join(',')})`;

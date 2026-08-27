@@ -124,7 +124,7 @@ export function initStage2({ onChanged }) {
       Object.assign(state.translations, toTranslationMap(allTranslations));
       renderFurigana();
       onChanged();
-      const count = allTranslations.filter(r => r.translation).length;
+      const count = allTranslations.filter(r => r.translation && !r.failed).length;
       if (count > 0) {
         progress.ok(`已翻译 ${count} 条`);
       } else {
