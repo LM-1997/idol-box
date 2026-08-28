@@ -65,10 +65,10 @@ export function initStepFlow(containerId) {
     card.style.display = '';
     const body = card.querySelector('.sf-card-body');
     const footer = card.querySelector('.sf-card-footer');
-    if (body) { body.hidden = false; requestAnimationFrame(() => body.classList.add('expanded')); }
+    if (body) { body.hidden = false; void body.offsetHeight; body.classList.add('expanded'); }
     if (footer) {
       const isLast = current === total - 1 && !footer.querySelector('.sf-confirm');
-      if (!isLast) { footer.hidden = false; requestAnimationFrame(() => footer.classList.add('expanded')); }
+      if (!isLast) { footer.hidden = false; void footer.offsetHeight; footer.classList.add('expanded'); }
     }
 
     // 隐藏其他步骤

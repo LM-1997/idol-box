@@ -3,6 +3,6 @@
   "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Pure frontend idol lyrics assignment and rehearsal tool. Runs entirely in-browser via CDN (no build, no install). Frontend deps loaded via CDN in index.html: exceljs@4.4.0, sortablejs@1.15.7. The server.js is a zero-dependency Node static server + lyrics library API.",
+  "description": "Pure frontend idol lyrics assignment and rehearsal tool. Runs entirely in-browser via CDN (no build, no install). Frontend deps loaded via CDN in index.html: exceljs@4.4.0, sortablejs@1.15.7. Ready for static hosting on GitHub Pages.",
   "dependencies": {}
 }

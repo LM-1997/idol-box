@@ -319,58 +319,6 @@ initStepFlow('burnFlow');
 $('dsKey').oninput = () => setDsApiKey($('dsKey').value.trim());
 $('dsModel').onchange = () => setDsModel($('dsModel').value);
 
-// ---------------------------------------------------------------------------
-// 歌词库（修复竞态：请求版本号）
-// ---------------------------------------------------------------------------
-let lyricsFiles = [];
-let lyricsReqId = 0;
-
-async function refreshLyricsLibrary() {
-  const reqId = ++lyricsReqId;
-  const box = $('lyricsLibrary');
-  const count = $('lyricsCount');
-  try {
-    const q = $('lyricsSearch').value.trim();
-    const res = await fetch(`/api/lyrics${q ? `?q=${encodeURIComponent(q)}` : ''}`);
-    // 过期响应丢弃
-    if (reqId !== lyricsReqId) return;
-    const data = await res.json();
-    lyricsFiles = data.files || [];
-    count.textContent = lyricsFiles.length ? `${lyricsFiles.length} 首` : '无歌词';
-    box.innerHTML = lyricsFiles.length
-      ? lyricsFiles.map(f => `<option value="${esc(f.rel)}">${esc(truncateTitle(f.song))}${f.dir ? `（${esc(truncateTitle(f.dir))}）` : ''} — ${esc(truncateTitle(f.name))}</option>`).join('')
-      : '<option value="" disabled>（未找到，请把歌词放入 lyrics/ 目录，可用「歌曲名/歌曲名.lrc」子文件夹）</option>';
-  } catch {
-    if (reqId !== lyricsReqId) return;
-    count.textContent = '歌词库不可用（需 node server.js 启动）';
-    box.innerHTML = '<option value="" disabled>请用 node server.js 启动以获得歌词库</option>';
-  }
-}
-
-async function loadLyricsFromLibrary() {
-  const box = $('lyricsLibrary');
-  const rel = box.value;
-  if (!rel) { status('请先选择一个歌词文件', true); return; }
-  try {
-    const res = await fetch(`/api/lyrics?file=${encodeURIComponent(rel)}`);
-    if (!res.ok) throw new Error('读取失败');
-    const text = await res.text();
-    const file = lyricsFiles.find(f => f.rel === rel);
-    const label = file?.song || file?.name || rel;
-    handleLyricsText(text, file?.name || label);
-    lastBuffer = new TextEncoder().encode(text);
-    lastFilename = file?.name || label;
-    $('redecodeBtn').disabled = false;
-  } catch (error) { status(`歌词库读取失败：${error.message}`, true); }
-}
-
-$('lyricsSearch').addEventListener('input', refreshLyricsLibrary);
-const loadLibBtn = $('loadLyricsFromLib');
-if (loadLibBtn) loadLibBtn.onclick = loadLyricsFromLibrary;
-// 双击歌词库列表项也可载入（符合直觉的交互）
-const libSelect = $('lyricsLibrary');
-if (libSelect) libSelect.addEventListener('dblclick', loadLyricsFromLibrary);
-refreshLyricsLibrary();
 
 function bindDrop(target, input, accept) { ['dragenter', 'dragover'].forEach(type => target.addEventListener(type, event => { event.preventDefault(); target.classList.add('dragover'); })); ['dragleave', 'drop'].forEach(type => target.addEventListener(type, event => { event.preventDefault(); target.classList.remove('dragover'); })); target.addEventListener('drop', event => { const file = [...event.dataTransfer.files].find(candidate => !accept || accept(candidate)); if (!file) return; const transfer = new DataTransfer(); transfer.items.add(file); input.files = transfer.files; input.dispatchEvent(new Event('change', { bubbles: true })); }); }
 bindDrop($('lrcDrop'), $('lrcFile'), file => /\.(lrc|txt|srt|vtt|ass|ssa|scc|ttml|dfxp|smi|sami|xml)$/i.test(file.name));
